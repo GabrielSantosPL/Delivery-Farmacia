@@ -315,7 +315,7 @@ export default function ManagerView() {
           </div>
 
           <div className="table-responsive-wrapper">
-            <table className="custom-table">
+            <table className="custom-table mobile-order-table">
               <thead>
                 <tr>
                   <th>Código</th>
@@ -417,7 +417,7 @@ export default function ManagerView() {
           </div>
 
           <div className="table-responsive-wrapper">
-            <table className="custom-table">
+            <table className="custom-table mobile-stock-table">
               <thead>
                 <tr>
                   <th>Medicamento</th>

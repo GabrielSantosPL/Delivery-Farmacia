@@ -41,18 +41,25 @@ export default function Navbar({ onOpenChatTrigger = null }) {
   return (
     <>
       <header className="app-navbar">
+        <div className="gov-topbar">
+          <div className="gov-topbar-inner">
+            <span>Prefeitura Municipal de Indaiatuba</span>
+            <span className="hide-on-mobile">Secretaria Municipal de Saúde • SUS</span>
+          </div>
+        </div>
         <div className="navbar-container">
           {/* Brand / Logo */}
           <div className="navbar-brand">
-            <div className="brand-logo-icon">
-              💊
+            <div className="brand-logo-icon gov-sun-logo" aria-hidden="true">
+              <span className="gov-sun-core" />
             </div>
             <div className="brand-texts">
+              <div className="brand-kicker">Prefeitura de</div>
               <div className="brand-title">
-                <span>MedDel</span> <span className="brand-city">Indaiatuba</span>
+                <span className="brand-city">INDAIATUBA</span>
               </div>
               <div className="brand-subtitle">
-                Entrega Municipal de Medicamentos • SUS Indaiatuba/SP
+                MedDel • Entrega municipal de medicamentos
               </div>
             </div>
           </div>

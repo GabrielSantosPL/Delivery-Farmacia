@@ -323,7 +323,7 @@ export default function PharmacistView() {
 
           {/* Tabela de Estoque */}
           <div className="table-responsive-wrapper">
-            <table className="custom-table">
+            <table className="custom-table mobile-stock-table">
               <thead>
                 <tr>
                   <th>Medicamento</th>

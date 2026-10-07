@@ -28,23 +28,30 @@ export default function LoginView() {
 
   return (
     <div className="login-page-container">
+      <div className="gov-topbar login-gov-bar">
+        <div className="gov-topbar-inner">
+          <span>Prefeitura Municipal de Indaiatuba</span>
+          <span className="hide-on-mobile">Cidadão • Saúde • Farmácia Municipal</span>
+        </div>
+      </div>
       <div className="login-card-box">
         {/* Header */}
         <div className="login-header-section">
-          <div className="login-icon-badge">💊</div>
-          <h1 className="login-title">MedDel Indaiatuba</h1>
-          <p className="login-subtitle">
-            Sistema Municipal de Delivery de Medicamentos sob Prescrição
-          </p>
-          <div className="login-tag-location">
-            <span>📍 Prefeitura Municipal de Indaiatuba - SP</span>
+          <div className="brand-logo-icon gov-sun-logo login-sun">
+            <span className="gov-sun-core" />
           </div>
+          <p className="brand-kicker">Prefeitura de</p>
+          <h1 className="login-title">INDAIATUBA</h1>
+          <p className="login-slogan">Um novo tempo pra você</p>
+          <p className="login-subtitle">
+            MedDel • Sistema municipal de entrega de medicamentos do SUS
+          </p>
         </div>
 
         {/* Quick Demo Access (Ideal para Banca Acadêmica) */}
         <div className="quick-access-box">
           <div className="quick-access-title">
-            <Sparkles size={16} color="#0284c7" />
+            <Sparkles size={16} color="#0b3aaf" />
             <span>Acesso Rápido para Avaliação Acadêmica:</span>
           </div>
           <p className="quick-access-desc">
@@ -172,7 +179,7 @@ export default function LoginView() {
         </form>
 
         <div className="login-footer-info">
-          <span>Área de atuação restrita à comarca de Indaiatuba - SP • Assistência Farmacêutica Municipal</span>
+          <span>Av. Eng. Fábio Roberto Barnabé, 2800 • Indaiatuba/SP • Assistência Farmacêutica Municipal</span>
         </div>
       </div>
     </div>

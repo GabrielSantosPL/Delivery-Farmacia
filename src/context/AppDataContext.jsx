@@ -98,6 +98,32 @@ export function AppDataProvider({ children }) {
     setNotifications(prev => prev.map(n => n.userId === userId ? { ...n, read: true } : n));
   };
 
+  const markChatThreadAsRead = (readerUserId, otherUserId) => {
+    if (!readerUserId || !otherUserId) return;
+
+    setChatMessages(prev => {
+      let changed = false;
+      const next = prev.map(message => {
+        const incomingUnread = message.toUserId === readerUserId && message.fromUserId === otherUserId && !message.read;
+        if (!incomingUnread) return message;
+        changed = true;
+        return { ...message, read: true };
+      });
+      return changed ? next : prev;
+    });
+
+    setNotifications(prev => {
+      let changed = false;
+      const next = prev.map(notif => {
+        const isChatNotif = notif.userId === readerUserId && notif.type === 'chat' && !notif.read;
+        if (!isChatNotif) return notif;
+        changed = true;
+        return { ...notif, read: true };
+      });
+      return changed ? next : prev;
+    });
+  };
+
   // Enviar Mensagem de Chat
   const sendChatMessage = ({ fromUserId, fromUserName, fromUserRole, toUserId, toUserName, orderId = null, text }) => {
     if (!text || !text.trim()) return;
@@ -565,6 +591,7 @@ export function AppDataProvider({ children }) {
       addNotification,
       markNotificationAsRead,
       markAllNotificationsAsRead,
+      markChatThreadAsRead,
       resetToDefaults,
       hub: INDAIATUBA_HUB
     }}>

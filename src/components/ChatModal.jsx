@@ -2,14 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useAppData } from '../context/AppDataContext';
 import Modal from './Modal';
-import { Send, MessageSquare, AlertCircle } from 'lucide-react';
+import { Send, MessageSquare, AlertCircle, ArrowLeft } from 'lucide-react';
 import { formatDate } from '../utils/formatters';
 
 export default function ChatModal({ isOpen, onClose, initialContactId = null, initialOrderId = null }) {
   const { currentUser, userRoles, mockUsers } = useAuth();
-  const { chatMessages, sendChatMessage, orders } = useAppData();
+  const { chatMessages, sendChatMessage, orders, markChatThreadAsRead } = useAppData();
 
   const [selectedContactId, setSelectedContactId] = useState(null);
+  const [mobileChatOpen, setMobileChatOpen] = useState(false);
   const [inputText, setInputText] = useState('');
   const messagesEndRef = useRef(null);
 
@@ -146,6 +147,24 @@ export default function ChatModal({ isOpen, onClose, initialContactId = null, in
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages, selectedContactId]);
 
+  // Marca o thread selecionado como lido ao abrir ou trocar de contato.
+  // A dependência do histórico é intencionalmente omitida para evitar uma
+  // nova marcação em cada atualização e manter o contador estável.
+  useEffect(() => {
+    if (!isOpen || !currentUser || !selectedContactId) return;
+    markChatThreadAsRead(currentUser.id, selectedContactId);
+  }, [isOpen, currentUser?.id, selectedContactId, markChatThreadAsRead]);
+
+  const handleSelectContact = (contactId) => {
+    setSelectedContactId(contactId);
+    setMobileChatOpen(true);
+    if (currentUser) markChatThreadAsRead(currentUser.id, contactId);
+  };
+
+  const handleBackToContacts = () => {
+    setMobileChatOpen(false);
+  };
+
   if (!currentUser) return null;
 
   const currentContact = allowedContacts.find(c => c.id === selectedContactId) || allowedContacts[0];
@@ -183,7 +202,7 @@ export default function ChatModal({ isOpen, onClose, initialContactId = null, in
       title="Central de Mensagens e Comunicação SUS"
       maxWidth="820px"
     >
-      <div className="chat-modal-layout">
+      <div className={`chat-modal-layout ${mobileChatOpen ? 'mobile-chat-open' : 'mobile-chat-list'}`}>
         {/* Barra Lateral: Lista de Contatos Permitidos */}
         <div className="chat-contacts-sidebar">
           <div className="contacts-sidebar-title">
@@ -199,22 +218,30 @@ export default function ChatModal({ isOpen, onClose, initialContactId = null, in
             <div className="contacts-list-scroll">
               {allowedContacts.map(contact => {
                 const isSelected = currentContact?.id === contact.id;
-                // Conta mensagens do contato
-                const contactMsgs = chatMessages.filter(m => 
-                  m.fromUserId === contact.id && m.toUserId === currentUser.id
-                );
+                const unreadFromContact = chatMessages.filter(m =>
+                  m.fromUserId === contact.id && m.toUserId === currentUser.id && !m.read
+                ).length;
+                const latestMessage = chatMessages
+                  .filter(m => m.fromUserId === contact.id && m.toUserId === currentUser.id)
+                  .slice(-1)[0];
                 return (
                   <button
                     key={contact.id}
                     type="button"
                     className={`contact-item-btn ${isSelected ? 'active' : ''}`}
-                    onClick={() => setSelectedContactId(contact.id)}
+                    onClick={() => handleSelectContact(contact.id)}
                   >
                     <span className="contact-avatar-badge">{contact.avatar}</span>
                     <div className="contact-item-meta">
                       <span className="contact-item-name">{contact.name}</span>
                       <span className="contact-item-role">{contact.roleLabel}</span>
+                      {latestMessage && (
+                        <span className="contact-preview">{latestMessage.text}</span>
+                      )}
                     </div>
+                    {unreadFromContact > 0 && (
+                      <span className="contact-unread-pill">{unreadFromContact}</span>
+                    )}
                   </button>
                 );
               })}
@@ -233,16 +260,25 @@ export default function ChatModal({ isOpen, onClose, initialContactId = null, in
             <>
               {/* Header do Contato Ativo */}
               <div className="conversation-header">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <button
+                  type="button"
+                  className="mobile-chat-back"
+                  onClick={handleBackToContacts}
+                  aria-label="Voltar para a lista de contatos"
+                >
+                  <ArrowLeft size={18} />
+                  <span>Contatos</span>
+                </button>
+                <div className="conversation-contact-header">
                   <span style={{ fontSize: '20px' }}>{currentContact.avatar}</span>
-                  <div>
+                  <div className="conversation-contact-details">
                     <strong style={{ fontSize: '14px', color: '#0f172a' }}>{currentContact.name}</strong>
                     <div style={{ fontSize: '11px', color: '#64748b' }}>{currentContact.roleLabel}</div>
+                    {currentContact.orderId && (
+                      <span className="chat-order-pill">Pedido: {currentContact.orderId}</span>
+                    )}
                   </div>
                 </div>
-                {currentContact.orderId && (
-                  <span className="chat-order-pill">Pedido: {currentContact.orderId}</span>
-                )}
               </div>
 
               {/* Mensagens */}

@@ -1,33 +1,47 @@
-/* Reset & Base System Styles */
+/* Identidade visual alinhada ao site da Prefeitura de Indaiatuba */
 :root {
-  --primary: #0284c7;
-  --primary-hover: #0369a1;
-  --primary-light: #e0f2fe;
-  --secondary: #0d9488;
+  --gov-blue: #0047ab;
+  --gov-blue-btn: #0b3aaf;
+  --gov-blue-dark: #003580;
+  --gov-red: #e31c23;
+  --gov-pink: #e91e8c;
+  --gov-yellow: #f1c40f;
+  --gov-green: #27ae60;
+  --gov-text: #212529;
+  --gov-muted: #4b4b4b;
+
+  --primary: #0b3aaf;
+  --primary-hover: #003580;
+  --primary-light: #e8eefc;
+  --secondary: #0047ab;
   --accent-orange: #ea580c;
-  --accent-green: #10b981;
+  --accent-green: #27ae60;
   --accent-purple: #7c3aed;
-  
-  --bg-main: #f8fafc;
+  --accent-red: #e31c23;
+
+  --bg-main: #f7f7f7;
   --bg-card: #ffffff;
-  --border-color: #e2e8f0;
+  --border-color: #e2e6ea;
   --border-light: #f1f5f9;
-  
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
-  
+
+  --text-main: #212529;
+  --text-muted: #4b4b4b;
+  --text-light: #8a8f96;
+
   --radius-sm: 6px;
   --radius-md: 10px;
-  --radius-lg: 16px;
+  --radius-lg: 14px;
+  --radius-pill: 20px;
   --radius-full: 9999px;
-  
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.04);
-  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05);
 
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+
+  --font-sans: 'Open Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-display: 'Oswald', 'Open Sans', sans-serif;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 *, *::before, *::after {
@@ -46,18 +60,26 @@ html, body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
+}
+
+img, svg, video, canvas {
+  max-width: 100%;
+  height: auto;
 }
 
 input, button, select, textarea {
   font-family: inherit;
   font-size: inherit;
+  max-width: 100%;
 }
 
 button {
@@ -69,7 +91,11 @@ a {
   text-decoration: none;
 }
 
-/* Animations */
+h1, h2, h3, .header-title, .brand-title, .login-title, .box-title {
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+
 @keyframes pulse {
   0% { transform: scale(1); }
   50% { transform: scale(1.08); }
@@ -88,7 +114,12 @@ a {
 }
 
 @keyframes liveGpsPulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(39, 174, 96, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(39, 174, 96, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(39, 174, 96, 0); }
+}
+
+@keyframes spinDots {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

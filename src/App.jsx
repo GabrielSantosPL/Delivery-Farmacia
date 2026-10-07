@@ -10,6 +10,7 @@ import ManagerView from './views/ManagerView';
 import CitizenView from './views/CitizenView';
 import './App.css';
 import NotificationDrawer from './components/NotificationDrawer';
+import AppFooter from './components/AppFooter';
 
 function MainRouter() {
   const { currentUser, userRoles } = useAuth();
@@ -29,6 +30,7 @@ function MainRouter() {
         {currentUser.role === userRoles.CLIENTE && <CitizenView />}
       </main>
 
+      <AppFooter />
       <MobileNav />
     </div>
   );

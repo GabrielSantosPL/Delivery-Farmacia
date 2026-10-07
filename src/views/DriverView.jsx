@@ -6,13 +6,10 @@ import Badge from '../components/Badge';
 import Modal from '../components/Modal';
 import LeafletMap from '../components/LeafletMap';
 import ChatModal from '../components/ChatModal';
-import { 
-  generatePhysicalPrescriptionCollectedSvg, 
-  generateInvalidDocumentSvg 
-} from '../mock/mockPrescriptions';
+import { generateInvalidDocumentSvg } from '../mock/mockPrescriptions';
 import { DRIVER_CANCELLATION_REASONS } from '../mock/mockData';
 import { optimizeDeliveryQueue } from '../utils/routeOptimizer';
-import { comparePrescriptions } from '../utils/prescriptionValidator';
+import { comparePrescriptions, simulateCapturedPrescriptionPhoto } from '../utils/prescriptionValidator';
 import { 
   Navigation, CheckCircle, Camera, MapPin, Phone, 
   Package, Upload, Crosshair, AlertCircle, Sparkles, 
@@ -115,14 +112,10 @@ export default function DriverView() {
     }
   };
 
-  // Simular foto correta (recolhida e carimbada)
-  const handleSimulateValidPhoto = () => {
-    if (!selectedOrderToDeliver) return;
-    const validPhoto = generatePhysicalPrescriptionCollectedSvg({
-      orderId: selectedOrderToDeliver.id,
-      patientName: selectedOrderToDeliver.patient?.name,
-      date: new Date().toLocaleDateString('pt-BR')
-    });
+  // Simular foto correta (mesma receita, com enquadramento e carimbo diferentes)
+  const handleSimulateValidPhoto = async () => {
+    if (!selectedOrderToDeliver?.prescriptionUrl) return;
+    const validPhoto = await simulateCapturedPrescriptionPhoto(selectedOrderToDeliver.prescriptionUrl);
     handlePhotoCaptured(validPhoto);
   };
 
@@ -240,12 +233,14 @@ export default function DriverView() {
         <div className="driver-orders-section">
           {/* Barra com Botão de Chat com o Gestor */}
           <div className="driver-summary-bar">
-            <span>📦 Total de entregas: <b>{myOrders.length}</b></span>
-            <span>⚡ Em andamento: <b>{pendingDeliveries.length}</b></span>
-            
+            <div className="driver-summary-stats">
+              <span>📦 Total de entregas: <b>{myOrders.length}</b></span>
+              <span>⚡ Em andamento: <b>{pendingDeliveries.length}</b></span>
+            </div>
+
             <button
               type="button"
-              className="btn-chat-manager-shortcut"
+              className="btn-chat-manager-shortcut driver-manager-chat-btn"
               onClick={() => setChatTarget({ contactId: 'user-gerente' })}
             >
               <MessageSquare size={15} />
