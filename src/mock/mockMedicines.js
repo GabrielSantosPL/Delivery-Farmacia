@@ -1,0 +1,133 @@
+// Lista de Medicamentos da Farmácia Municipal de Indaiatuba (REMUME - Relação Municipal de Medicamentos Essenciais)
+export const MOCK_MEDICINES = [
+  {
+    id: 'med-001',
+    name: 'Amoxicilina 500mg',
+    form: 'Cápsula',
+    category: 'Antibiótico',
+    controlType: 'Receita de Controle Especial (C1)',
+    currentStock: 480,
+    minStock: 100,
+    unit: 'comprimidos',
+    batch: 'LOTE-AMX2026',
+    expiryDate: '2027-08-30',
+    description: 'Indicado para o tratamento de infecções bacterianas das vias respiratórias e urinárias.'
+  },
+  {
+    id: 'med-002',
+    name: 'Losartana Potássica 50mg',
+    form: 'Comprimido Revestido',
+    category: 'Anti-hipertensivo',
+    controlType: 'Receita Branca Comum',
+    currentStock: 1250,
+    minStock: 300,
+    unit: 'comprimidos',
+    batch: 'LOTE-LOS2026',
+    expiryDate: '2028-01-15',
+    description: 'Tratamento de hipertensão arterial e insuficiência cardíaca.'
+  },
+  {
+    id: 'med-003',
+    name: 'Metformina Cloridrato 850mg',
+    form: 'Comprimido',
+    category: 'Antidiabético Oral',
+    controlType: 'Receita Branca Comum',
+    currentStock: 890,
+    minStock: 250,
+    unit: 'comprimidos',
+    batch: 'LOTE-MET2026',
+    expiryDate: '2027-11-20',
+    description: 'Tratamento de diabetes mellitus tipo 2 em adultos.'
+  },
+  {
+    id: 'med-004',
+    name: 'Dipirona Monoidratada 500mg/mL',
+    form: 'Solução Gotas 20mL',
+    category: 'Analgésico e Antitérmico',
+    controlType: 'Receita Simples',
+    currentStock: 320,
+    minStock: 80,
+    unit: 'frascos',
+    batch: 'LOTE-DIP2026',
+    expiryDate: '2027-05-10',
+    description: 'Indicado para dores e febre em geral.'
+  },
+  {
+    id: 'med-005',
+    name: 'Salbutamol Sulfato 100mcg/dose',
+    form: 'Aerossol Oral 200 doses',
+    category: 'Broncodilatador',
+    controlType: 'Receita Branca Comum',
+    currentStock: 95,
+    minStock: 50,
+    unit: 'inaladores',
+    batch: 'LOTE-SAL2026',
+    expiryDate: '2026-12-18',
+    description: 'Alívio do broncoespasmo no tratamento da asma e DPOC.'
+  },
+  {
+    id: 'med-006',
+    name: 'Omeprazol 20mg',
+    form: 'Cápsula com microgrânulos gastrorresistentes',
+    category: 'Inibidor de Bomba de Prótons',
+    controlType: 'Receita Simples',
+    currentStock: 640,
+    minStock: 150,
+    unit: 'cápsulas',
+    batch: 'LOTE-OME2026',
+    expiryDate: '2027-09-05',
+    description: 'Tratamento de gastrite, úlcera péptica e refluxo gastroesofágico.'
+  },
+  {
+    id: 'med-007',
+    name: 'Sertralina Cloridrato 50mg',
+    form: 'Comprimido Revestido',
+    category: 'Antidepressivo',
+    controlType: 'Receita de Controle Especial (C1)',
+    currentStock: 28,
+    minStock: 60, // Estoque baixo para demonstração
+    unit: 'comprimidos',
+    batch: 'LOTE-SER2026',
+    expiryDate: '2027-04-12',
+    description: 'Tratamento de episódios depressivos, transtorno de pânico e ansiedade.'
+  },
+  {
+    id: 'med-008',
+    name: 'Insulina Humana NPH 100 UI/mL',
+    form: 'Suspensão Injetável 10mL',
+    category: 'Antidiabético Injetável',
+    controlType: 'Receita Simples',
+    currentStock: 110,
+    minStock: 40,
+    unit: 'frascos',
+    batch: 'LOTE-NPH2026',
+    expiryDate: '2026-11-30',
+    description: 'Controle de glicemia para pacientes insulino-dependentes (refrigeração necessária).'
+  },
+  {
+    id: 'med-009',
+    name: 'Atenolol 50mg',
+    form: 'Comprimido',
+    category: 'Anti-hipertensivo',
+    controlType: 'Receita Simples',
+    currentStock: 410,
+    minStock: 100,
+    unit: 'comprimidos',
+    batch: 'LOTE-ATE2026',
+    expiryDate: '2028-03-22',
+    description: 'Controle de hipertensão arterial, angina de peito e arritmias.'
+  },
+  {
+    id: 'med-010',
+    name: 'Ibuprofeno 600mg',
+    form: 'Comprimido Revestido',
+    category: 'Anti-inflamatório Não Esteroidal',
+    controlType: 'Receita Simples',
+    currentStock: 350,
+    minStock: 120,
+    unit: 'comprimidos',
+    batch: 'LOTE-IBU2026',
+    expiryDate: '2027-10-15',
+    description: 'Alívio de dor de intensidade leve a moderada e processos inflamatórios.'
+  }
+];
