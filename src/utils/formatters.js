@@ -94,6 +94,15 @@ export function getStatusInfo(status) {
         border: '#fda4af',
         icon: '⚠️'
       };
+    case 'CANCELADO_CLIENTE':
+      return {
+        label: 'Cancelado pelo Cliente',
+        color: 'badge-secondary',
+        bg: '#f1f5f9',
+        text: '#475569',
+        border: '#cbd5e1',
+        icon: '↩️'
+      };
     default:
       return {
         label: status || 'Desconhecido',

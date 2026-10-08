@@ -11,12 +11,12 @@ import { INDAIATUBA_NEIGHBORHOODS, getCoordinatesForNeighborhood } from '../mock
 import { 
   PlusCircle, FileUp, Clock, CheckCircle2, 
   AlertCircle, Edit2, Trash2, Camera, Navigation, 
-  Sparkles, Eye, MessageSquare, Bell 
+  Sparkles, Eye, MessageSquare, Bell, KeyRound, PackageCheck, PackagePlus, XCircle
 } from 'lucide-react';
 
 export default function CitizenView() {
   const { currentUser } = useAuth();
-  const { orders, inventory, hub, drivers, chatMessages, createOrder, updateOrder } = useAppData();
+  const { orders, inventory, hub, drivers, chatMessages, createOrder, updateOrder, resolveStockShortage } = useAppData();
 
   const [activeTab, setActiveTab] = useState('pedidos'); // 'pedidos' | 'novo' | 'rastreio'
   const [selectedTrackingOrder, setSelectedTrackingOrder] = useState(null);
@@ -37,6 +37,9 @@ export default function CitizenView() {
     o.patient?.id === currentUser.id || 
     o.patient?.cpf === currentUser.cpf ||
     o.patient?.name === currentUser.name
+  );
+  const activeDeliveryOrder = myOrders.find(order =>
+    order.deliveryCode && !['ENTREGUE', 'CANCELADO_ENTREGADOR'].includes(order.status)
   );
 
   // Upload da foto da receita
@@ -169,6 +172,25 @@ export default function CitizenView() {
       {/* ============================================================== */}
       {activeTab === 'pedidos' && (
         <div className="citizen-orders-section">
+          <div className={`citizen-delivery-code citizen-delivery-code-summary ${activeDeliveryOrder ? 'is-available' : 'is-pending'}`}>
+            <div>
+              <strong>{activeDeliveryOrder ? 'Código para receber seu pedido' : 'Código de recebimento indisponível'}</strong>
+              <p>
+                {activeDeliveryOrder
+                  ? `Pedido ${activeDeliveryOrder.id} · informe este código ao entregador.`
+                  : 'O código será disponibilizado quando um pedido for liberado para entrega.'}
+              </p>
+            </div>
+            {activeDeliveryOrder ? (
+              <span className="citizen-delivery-code-value">
+                <KeyRound size={16} />
+                {activeDeliveryOrder.deliveryCode}
+              </span>
+            ) : (
+              <span className="citizen-delivery-code-pending">Aguardando liberação</span>
+            )}
+          </div>
+
           {myOrders.length === 0 ? (
             <div className="empty-state-card">
               <p>Você ainda não possui nenhum pedido cadastrado.</p>
@@ -186,7 +208,7 @@ export default function CitizenView() {
               {myOrders.map(order => {
                 const canEdit = order.status === 'PENDENTE_VALIDACAO';
                 const isRejected = order.status === 'RECUSADO';
-                const isCancelled = order.status === 'CANCELADO_ENTREGADOR';
+                const isCancelled = ['CANCELADO_ENTREGADOR', 'CANCELADO_CLIENTE'].includes(order.status);
                 const pharmacistInitiated = chatMessages.some(m => 
                   m.fromUserRole === 'farmaceutico' && 
                   (m.toUserId === currentUser.id || m.toUserName === currentUser.name)
@@ -199,7 +221,10 @@ export default function CitizenView() {
                         <div className="order-code">{order.id}</div>
                         <div className="order-date">{formatDate(order.createdAt)}</div>
                       </div>
-                      <Badge status={order.status} />
+                      <Badge
+                        status={order.status}
+                        text={order.stockResolution === 'awaiting_restock' ? 'Aguardando reposição' : undefined}
+                      />
                     </div>
 
                     {/* ALERTA DE PROXIMIDADE (PEDIDO PERTO DE SER ENTREGUE) */}
@@ -213,11 +238,62 @@ export default function CitizenView() {
                       </div>
                     )}
 
+                    {order.deliveryCode && !['ENTREGUE', 'CANCELADO_ENTREGADOR', 'CANCELADO_CLIENTE'].includes(order.status) && (
+                      <div className="citizen-delivery-code">
+                        <div>
+                          <strong>Código para receber</strong>
+                          <p>Informe este código ao entregador para confirmar a entrega.</p>
+                        </div>
+                        <span className="citizen-delivery-code-value">
+                          <KeyRound size={15} />
+                          {order.deliveryCode}
+                        </span>
+                      </div>
+                    )}
+
                     {/* Alerta de Cancelamento pelo Motoboy */}
                     {isCancelled && (
                       <div className="rejection-box-alert">
-                        <strong>⚠️ Entrega Não Concluída pelo Motoboy: {order.cancellationReason}</strong>
-                        <p>{order.cancellationDetails || 'Houve um imprevisto na rota. Entre em contato com a Central SUS para reagendamento da entrega.'}</p>
+                        <strong>{order.status === 'CANCELADO_CLIENTE' ? 'Pedido cancelado conforme sua escolha' : `⚠️ Entrega Não Concluída pelo Motoboy: ${order.cancellationReason}`}</strong>
+                        <p>{order.status === 'CANCELADO_CLIENTE' ? order.cancellationReason : order.cancellationDetails || 'Houve um imprevisto na rota. Entre em contato com a Central SUS para reagendamento da entrega.'}</p>
+                      </div>
+                    )}
+
+                    {order.status === 'PENDENTE_ESTOQUE' && order.stockResolution === 'waiting_customer_choice' && (
+                      <div className="stock-resolution-box">
+                        <strong>Escolha como deseja receber</strong>
+                        <p>Disponíveis agora: {order.availableItems?.map(item => item.name).join(', ') || 'nenhum medicamento'}.</p>
+                        <p>Em falta: {order.shortageItems?.map(item => item.name).join(', ') || 'nenhum medicamento'}.</p>
+                        <div className="stock-resolution-actions">
+                          <button
+                            type="button"
+                            className="btn-stock-choice primary"
+                            onClick={() => resolveStockShortage(order.id, 'deliver_and_reorder')}
+                          >
+                            <PackagePlus size={16} />
+                            <span>Receber disponíveis e abrir pedido complementar</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-stock-choice"
+                            onClick={() => resolveStockShortage(order.id, 'deliver_available_only')}
+                          >
+                            <PackageCheck size={16} />
+                            <span>Receber somente os disponíveis</span>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-stock-choice cancel"
+                            onClick={() => {
+                              if (window.confirm('Deseja cancelar este pedido por completo?')) {
+                                resolveStockShortage(order.id, 'cancel');
+                              }
+                            }}
+                          >
+                            <XCircle size={16} />
+                            <span>Cancelar o pedido todo</span>
+                          </button>
+                        </div>
                       </div>
                     )}
 
@@ -453,8 +529,24 @@ export default function CitizenView() {
                     Destino: {trackingOrder.patient?.address}, {trackingOrder.patient?.neighborhood} (Indaiatuba/SP)
                   </p>
                 </div>
-                <Badge status={trackingOrder.status} />
+                <Badge
+                  status={trackingOrder.status}
+                  text={trackingOrder.stockResolution === 'awaiting_restock' ? 'Aguardando reposição' : undefined}
+                />
               </div>
+
+              {trackingOrder.deliveryCode && !['ENTREGUE', 'CANCELADO_ENTREGADOR', 'CANCELADO_CLIENTE'].includes(trackingOrder.status) && (
+                <div className="citizen-delivery-code" style={{ marginTop: '12px' }}>
+                  <div>
+                    <strong>Código para receber</strong>
+                    <p>Informe este código ao entregador para confirmar a entrega.</p>
+                  </div>
+                  <span className="citizen-delivery-code-value">
+                    <KeyRound size={15} />
+                    {trackingOrder.deliveryCode}
+                  </span>
+                </div>
+              )}
 
               {/* Mapa com a rota específica do pedido */}
               <div className="map-wrapper" style={{ marginTop: '16px' }}>

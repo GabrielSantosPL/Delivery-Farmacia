@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useAppData } from '../context/AppDataContext';
 import { formatDate } from '../utils/formatters';
@@ -50,7 +50,9 @@ export default function PharmacistView() {
   const [activeTab, setActiveTab] = useState('pedidos'); // 'pedidos' | 'estoque'
   const [statusFilter, setStatusFilter] = useState('TODOS');
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [draftOrderItems, setDraftOrderItems] = useState([]);
+  const [pharmacyDraftItems, setPharmacyDraftItems] = useState([]);
+  const [medicineSearch, setMedicineSearch] = useState('');
+  const [stockAvailabilityByMedicineId, setStockAvailabilityByMedicineId] = useState({});
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [showChatWithEquipe, setShowChatWithEquipe] = useState(false);
@@ -81,40 +83,79 @@ export default function PharmacistView() {
 
   const pendingCount = orders.filter(o => ['PENDENTE_VALIDACAO', 'PENDENTE_ESTOQUE'].includes(o.status)).length;
 
-  useEffect(() => {
-    if (selectedOrder) {
-      setDraftOrderItems((selectedOrder.items || []).map(item => ({ ...item })));
-    }
-  }, [selectedOrder]);
+  const openOrderReview = (order) => {
+    const draftItems = (order.items || []).map(item => ({ ...item }));
+    setSelectedOrder(order);
+    setPharmacyDraftItems(draftItems);
+    setMedicineSearch('');
+    setStockAvailabilityByMedicineId(Object.fromEntries(draftItems.map(item => {
+      const stockItem = inventory.find(medicine => medicine.id === item.medicineId);
+      const available = stockItem && Number(stockItem.currentStock || 0) >= Number(item.quantity || 0);
+      const savedClassification = order.stockResolution === 'awaiting_restock'
+        ? null
+        : item.stockAvailability;
+      return [item.medicineId, savedClassification || (available ? 'available' : 'shortage')];
+    })));
+  };
 
-  const toggleDraftItem = (medicine) => {
-    setDraftOrderItems(prev => {
-      const exists = prev.some(item => item.medicineId === medicine.id);
-      if (exists) {
-        return prev.filter(item => item.medicineId !== medicine.id);
-      }
+  const addMedicineToDraft = (medicine) => {
+    setPharmacyDraftItems(prev => {
+      if (prev.some(item => item.medicineId === medicine.id)) return prev;
       return [...prev, {
         medicineId: medicine.id,
         name: medicine.name,
-        quantity: Math.max(1, Number(medicine.currentStock || 1)),
-        dosage: medicine.form || 'Uso conforme prescrição'
+        quantity: 1,
+        dosage: ''
       }];
     });
-  };
-
-  const updateDraftQuantity = (medicineId, amount) => {
-    setDraftOrderItems(prev => prev.map(item => {
-      if (item.medicineId !== medicineId) return item;
-      return { ...item, quantity: Math.max(1, Number(amount) || 1) };
+    setStockAvailabilityByMedicineId(prev => ({
+      ...prev,
+      [medicine.id]: Number(medicine.currentStock || 0) >= 1 ? 'available' : 'shortage'
     }));
   };
 
-  const handleApprove = (order, action = 'full') => {
-    const itemsToSend = draftOrderItems.length > 0 ? draftOrderItems : (order.items || []);
+  const updateDraftItem = (medicineId, field, value) => {
+    setPharmacyDraftItems(prev => prev.map(item => item.medicineId === medicineId
+      ? { ...item, [field]: field === 'quantity' ? Math.max(1, Number(value) || 1) : value }
+      : item));
+
+    if (field === 'quantity') {
+      const stockItem = inventory.find(medicine => medicine.id === medicineId);
+      setStockAvailabilityByMedicineId(prev => ({
+        ...prev,
+        [medicineId]: stockItem && Number(stockItem.currentStock || 0) >= Number(value || 1) ? 'available' : 'shortage'
+      }));
+    }
+  };
+
+  const removeMedicineFromDraft = (medicineId) => {
+    setPharmacyDraftItems(prev => prev.filter(item => item.medicineId !== medicineId));
+    setStockAvailabilityByMedicineId(prev => {
+      const next = { ...prev };
+      delete next[medicineId];
+      return next;
+    });
+  };
+
+  const hasFullStock = (items) => items.length > 0 && items.every(item => {
+    const stockItem = inventory.find(medicine => medicine.id === item.medicineId);
+    return stockAvailabilityByMedicineId[item.medicineId] === 'available'
+      && stockItem
+      && Number(stockItem.currentStock || 0) >= Number(item.quantity || 0);
+  });
+
+  const handleApprove = (order) => {
+    if (pharmacyDraftItems.length === 0) {
+      alert('Adicione ao menos um medicamento da receita antes de encaminhar o pedido ao cliente.');
+      return;
+    }
     if (window.confirm(`Confirma a decisão do pedido ${order.id}?`)) {
-      approveOrder(order.id, currentUser.name, { selectedItems: itemsToSend, action });
+      const result = approveOrder(order.id, currentUser.name, {
+        selectedItems: pharmacyDraftItems,
+        availabilityByMedicineId: stockAvailabilityByMedicineId
+      });
+      if (result === false) return;
       setSelectedOrder(null);
-      setDraftOrderItems([]);
     }
   };
 
@@ -226,57 +267,59 @@ export default function PharmacistView() {
 
       {activeTab === 'resumo' && (
         <>
-          <div className="kpi-grid">
-            <div className="kpi-card">
-              <div className="kpi-icon-wrapper" style={{ background: '#e0f2fe', color: '#0284c7' }}>
-                <Package size={20} />
-              </div>
-              <div>
-                <div className="kpi-value">{dashboardStats.pendingReview}</div>
-                <div className="kpi-label">Pendências de validação</div>
-              </div>
-            </div>
-            <div className="kpi-card">
-              <div className="kpi-icon-wrapper" style={{ background: '#ffedd5', color: '#ea580c' }}>
-                <Truck size={20} />
-              </div>
-              <div>
-                <div className="kpi-value">{dashboardStats.inTransit}</div>
-                <div className="kpi-label">Entregas em rota</div>
-              </div>
-            </div>
-            <div className="kpi-card">
-              <div className="kpi-icon-wrapper" style={{ background: '#dcfce7', color: '#15803d' }}>
-                <CheckCircle2 size={20} />
-              </div>
-              <div>
-                <div className="kpi-value">{dashboardStats.delivered}</div>
-                <div className="kpi-label">Entregues no mês</div>
-              </div>
-            </div>
-            <div className="kpi-card">
-              <div className="kpi-icon-wrapper" style={{ background: '#fee2e2', color: '#b91c1c' }}>
-                <AlertTriangle size={20} />
-              </div>
-              <div>
-                <div className="kpi-value">{dashboardStats.lowStock}</div>
-                <div className="kpi-label">Itens com estoque crítico</div>
-              </div>
-            </div>
+          <div className="fleet-overview-header pharmacist-fleet-header">
+            <h3>Visão Geral da Frota Municipal</h3>
+            <span>{drivers.length} entregadores ativos</span>
           </div>
-
-          <div className="fleet-overview-panel">
-            <div className="fleet-overview-header">
-              <h3>Visão Geral da Frota Municipal</h3>
-              <span>{drivers.length} entregadores ativos</span>
+          <div className="pharmacist-dashboard-layout">
+            <div className="kpi-grid pharmacist-dashboard-kpis">
+              <div className="kpi-card">
+                <div className="kpi-icon-wrapper" style={{ background: '#e0f2fe', color: '#0284c7' }}>
+                  <Package size={20} />
+                </div>
+                <div>
+                  <div className="kpi-value">{dashboardStats.pendingReview}</div>
+                  <div className="kpi-label">Pendências de validação</div>
+                </div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-icon-wrapper" style={{ background: '#ffedd5', color: '#ea580c' }}>
+                  <Truck size={20} />
+                </div>
+                <div>
+                  <div className="kpi-value">{dashboardStats.inTransit}</div>
+                  <div className="kpi-label">Entregas em rota</div>
+                </div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-icon-wrapper" style={{ background: '#dcfce7', color: '#15803d' }}>
+                  <CheckCircle2 size={20} />
+                </div>
+                <div>
+                  <div className="kpi-value">{dashboardStats.delivered}</div>
+                  <div className="kpi-label">Entregues no mês</div>
+                </div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-icon-wrapper" style={{ background: '#fee2e2', color: '#b91c1c' }}>
+                  <AlertTriangle size={20} />
+                </div>
+                <div>
+                  <div className="kpi-value">{dashboardStats.lowStock}</div>
+                  <div className="kpi-label">Itens com estoque crítico</div>
+                </div>
+              </div>
             </div>
-            <div className="map-wrapper">
-              <LeafletMap
-                drivers={drivers}
-                orders={orders}
-                hub={hub}
-                height="320px"
-              />
+
+            <div className="fleet-overview-panel pharmacist-fleet-panel">
+              <div className="map-wrapper pharmacist-fleet-map">
+                <LeafletMap
+                  drivers={drivers}
+                  orders={orders}
+                  hub={hub}
+                  height="100%"
+                />
+              </div>
             </div>
           </div>
         </>
@@ -338,7 +381,10 @@ export default function PharmacistView() {
                         <div className="order-code">{order.id}</div>
                         <div className="order-date">{formatDate(order.createdAt)}</div>
                       </div>
-                      <Badge status={order.status} />
+                      <Badge
+                        status={order.status}
+                        text={order.stockResolution === 'awaiting_restock' ? 'Aguardando reposição' : undefined}
+                      />
                     </div>
 
                     {/* Dados do Paciente */}
@@ -376,7 +422,7 @@ export default function PharmacistView() {
                     <div className="order-card-footer">
                       <div 
                         className="prescription-thumbnail"
-                        onClick={() => setSelectedOrder(order)}
+                        onClick={() => openOrderReview(order)}
                         title="Clique para visualizar a receita completa"
                       >
                         <img src={order.prescriptionUrl} alt="Receita Médica" />
@@ -386,7 +432,7 @@ export default function PharmacistView() {
                       <button
                         type="button"
                         className="btn-evaluate"
-                        onClick={() => setSelectedOrder(order)}
+                        onClick={() => openOrderReview(order)}
                       >
                         <Eye size={16} />
                         <span>{isPending ? 'Avaliar Receita' : 'Ver Detalhes'}</span>
@@ -520,22 +566,107 @@ export default function PharmacistView() {
                 </div>
 
                 <div className="section-title-sm" style={{ marginTop: '16px' }}>
-                  Medicamentos Solicitados no Pedido:
+                  Medicamentos identificados na receita:
                 </div>
-                <div className="data-info-card">
-                  {selectedOrder.items.map((item, idx) => {
+                <div className="pharmacist-medicine-picker">
+                  <label className="form-label" htmlFor="pharmacist-medicine-search">Adicionar medicamento do estoque</label>
+                  <input
+                    id="pharmacist-medicine-search"
+                    className="form-input"
+                    value={medicineSearch}
+                    onChange={event => setMedicineSearch(event.target.value)}
+                    placeholder="Buscar medicamento..."
+                  />
+                  <div className="pharmacist-medicine-results">
+                    {inventory
+                      .filter(medicine => medicine.name.toLowerCase().includes(medicineSearch.toLowerCase()))
+                      .map(medicine => {
+                        const alreadyAdded = pharmacyDraftItems.some(item => item.medicineId === medicine.id);
+                        return (
+                          <div key={medicine.id} className="pharmacist-medicine-result">
+                            <div>
+                              <strong>{medicine.name}</strong>
+                              <span>Saldo: {medicine.currentStock} {medicine.unit || 'unidades'}</span>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn-add-medicine-to-order"
+                              onClick={() => addMedicineToDraft(medicine)}
+                              disabled={alreadyAdded}
+                            >
+                              <Plus size={14} />
+                              {alreadyAdded ? 'Adicionado' : 'Adicionar'}
+                            </button>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+
+                <div className="section-title-sm" style={{ marginTop: '12px' }}>
+                  Itens incluídos neste pedido:
+                </div>
+                <div className="data-info-card pharmacist-order-items">
+                  {pharmacyDraftItems.length === 0 ? (
+                    <span className="pharmacist-empty-order-items">Adicione os medicamentos identificados na receita para continuar.</span>
+                  ) : pharmacyDraftItems.map((item, idx) => {
                     const stockItem = inventory.find(m => m.id === item.medicineId);
-                    const hasStock = stockItem ? stockItem.currentStock >= item.quantity : true;
+                    const hasStock = Boolean(stockItem && Number(stockItem.currentStock || 0) >= Number(item.quantity || 0));
+                    const classification = stockAvailabilityByMedicineId[item.medicineId] || (hasStock ? 'available' : 'shortage');
                     return (
-                      <div key={idx} className="item-audit-row">
-                        <div>
+                      <div key={`${item.medicineId}-${idx}`} className="pharmacist-order-item-row">
+                        <div className="pharmacist-order-item-details">
                           <strong>{item.name}</strong>
-                          <div style={{ fontSize: '12px', color: '#64748b' }}>Dosagem: {item.dosage}</div>
+                          <label>
+                            Quantidade
+                            <input
+                              type="number"
+                              className="form-input pharmacist-item-quantity"
+                              min="1"
+                              value={item.quantity}
+                              onChange={event => updateDraftItem(item.medicineId, 'quantity', event.target.value)}
+                            />
+                          </label>
+                          <label>
+                            Posologia da receita
+                            <input
+                              type="text"
+                              className="form-input"
+                              value={item.dosage || ''}
+                              onChange={event => updateDraftItem(item.medicineId, 'dosage', event.target.value)}
+                              placeholder="Informe conforme a receita"
+                            />
+                          </label>
+                          <button
+                            type="button"
+                            className="btn-remove-order-medicine"
+                            onClick={() => removeMedicineFromDraft(item.medicineId)}
+                          >
+                            Remover do pedido
+                          </button>
                         </div>
-                        <div style={{ textAlign: 'right' }}>
-                          <div>Qtd: <b>{item.quantity}</b></div>
-                          <span style={{ fontSize: '11px', color: hasStock ? '#16a34a' : '#dc2626' }}>
-                            {hasStock ? 'Estoque disponível' : '⚠️ Estoque insuficiente'}
+                        <div className="medicine-stock-classifier">
+                          <div className="medicine-stock-actions" role="group" aria-label={`Disponibilidade de ${item.name}`}>
+                            <button
+                              type="button"
+                              className={`medicine-stock-choice available ${classification === 'available' ? 'selected' : ''}`}
+                              aria-pressed={classification === 'available'}
+                              disabled={!hasStock}
+                              onClick={() => setStockAvailabilityByMedicineId(prev => ({ ...prev, [item.medicineId]: 'available' }))}
+                            >
+                              Disponível
+                            </button>
+                            <button
+                              type="button"
+                              className={`medicine-stock-choice shortage ${classification === 'shortage' ? 'selected' : ''}`}
+                              aria-pressed={classification === 'shortage'}
+                              onClick={() => setStockAvailabilityByMedicineId(prev => ({ ...prev, [item.medicineId]: 'shortage' }))}
+                            >
+                              Em falta
+                            </button>
+                          </div>
+                          <span className="medicine-stock-quantity">
+                            Saldo atual: {stockItem?.currentStock ?? 0}
                           </span>
                         </div>
                       </div>
@@ -546,7 +677,10 @@ export default function PharmacistView() {
                 {/* Status Atual */}
                 <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ fontSize: '13px', color: '#64748b' }}>Status Atual:</span>
-                  <Badge status={selectedOrder.status} />
+                  <Badge
+                    status={selectedOrder.status}
+                    text={selectedOrder.stockResolution === 'awaiting_restock' ? 'Aguardando reposição' : undefined}
+                  />
                 </div>
 
                 {selectedOrder.rejectionReason && (
@@ -557,61 +691,15 @@ export default function PharmacistView() {
                 )}
 
                 {/* Botões de Ação para pedidos pendentes */}
-                {selectedOrder.status === 'PENDENTE_VALIDACAO' || selectedOrder.status === 'PENDENTE_ESTOQUE' ? (
+                {selectedOrder.status === 'PENDENTE_VALIDACAO' ? (
                   <div className="pharmacist-decision-actions">
-                    <div className="section-title-sm" style={{ marginTop: '16px' }}>Itens do pedido e seleção de liberação</div>
-                    <div className="data-info-card" style={{ gap: '8px' }}>
-                      {inventory.map(medicine => {
-                        const selected = draftOrderItems.some(item => item.medicineId === medicine.id);
-                        const qty = draftOrderItems.find(item => item.medicineId === medicine.id)?.quantity || 1;
-                        return (
-                          <div key={medicine.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <input
-                              type="checkbox"
-                              checked={selected}
-                              onChange={() => toggleDraftItem(medicine)}
-                            />
-                            <span style={{ flex: 1 }}>{medicine.name}</span>
-                            {selected && (
-                              <input
-                                type="number"
-                                min="1"
-                                value={qty}
-                                onChange={(e) => updateDraftQuantity(medicine.id, e.target.value)}
-                                style={{ width: '72px' }}
-                                className="form-input"
-                              />
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-
                     <button
                       type="button"
                       className="btn-approve-action"
-                      onClick={() => handleApprove(selectedOrder, 'full')}
+                      onClick={() => handleApprove(selectedOrder)}
                     >
                       <CheckCircle2 size={18} />
-                      <span>Enviar itens disponíveis</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      onClick={() => handleApprove(selectedOrder, 'open_new')}
-                    >
-                      <Package size={16} />
-                      <span>Enviar disponíveis + abrir pedido complementar</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      onClick={() => handleApprove(selectedOrder, 'available')}
-                    >
-                      <Package size={16} />
-                      <span>Enviar disponíveis sem novo pedido</span>
+                      <span>Aprovar e encaminhar decisão ao cliente</span>
                     </button>
 
                     <button
@@ -620,7 +708,32 @@ export default function PharmacistView() {
                       onClick={() => setShowRejectModal(true)}
                     >
                       <XCircle size={18} />
-                      <span>Cancelar todos os pedidos</span>
+                      <span>Recusar receita</span>
+                    </button>
+                  </div>
+                ) : selectedOrder.stockResolution === 'waiting_customer_choice' ? (
+                  <div className="data-info-card stock-decision-waiting">
+                    <strong>Aguardando decisão do cliente</strong>
+                    <span>As opções foram encaminhadas e a farmácia não deve escolher pelo paciente.</span>
+                  </div>
+                ) : selectedOrder.stockResolution === 'awaiting_restock' ? (
+                  <div className="pharmacist-decision-actions">
+                    <div className="data-info-card stock-decision-waiting">
+                      <strong>Aguardando reposição do estoque</strong>
+                      <span>
+                        {selectedOrder.customerStockChoice === 'deliver_available_only'
+                          ? 'O cliente decidiu manter o pedido original, sem criar outro para os itens faltantes.'
+                          : 'O cliente escolheu receber os itens faltantes em um pedido complementar.'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      className="btn-approve-action"
+                      onClick={() => handleApprove(selectedOrder)}
+                      disabled={!hasFullStock(selectedOrder.items)}
+                    >
+                      <CheckCircle2 size={18} />
+                      <span>{hasFullStock(selectedOrder.items) ? 'Liberar pedido complementar' : 'Aguardando reposição do estoque'}</span>
                     </button>
                   </div>
                 ) : (

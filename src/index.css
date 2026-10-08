@@ -1,47 +1,47 @@
 /* Identidade visual alinhada ao site da Prefeitura de Indaiatuba */
 :root {
-  --gov-blue: #0047ab;
-  --gov-blue-btn: #0b3aaf;
-  --gov-blue-dark: #003580;
-  --gov-red: #e31c23;
-  --gov-pink: #e91e8c;
-  --gov-yellow: #f1c40f;
-  --gov-green: #27ae60;
-  --gov-text: #212529;
-  --gov-muted: #4b4b4b;
+  --gov-blue: #168f82;
+  --gov-blue-btn: #087f73;
+  --gov-blue-dark: #075e56;
+  --gov-red: #168f82;
+  --gov-pink: #75b8a9;
+  --gov-yellow: #e7bd62;
+  --gov-green: #45a987;
+  --gov-text: #17332e;
+  --gov-muted: #64766f;
 
-  --primary: #0b3aaf;
-  --primary-hover: #003580;
-  --primary-light: #e8eefc;
-  --secondary: #0047ab;
-  --accent-orange: #ea580c;
-  --accent-green: #27ae60;
-  --accent-purple: #7c3aed;
-  --accent-red: #e31c23;
+  --primary: #087f73;
+  --primary-hover: #06695f;
+  --primary-light: #e2f2ed;
+  --secondary: #168f82;
+  --accent-orange: #c88742;
+  --accent-green: #278b70;
+  --accent-purple: #587b72;
+  --accent-red: #c95b5b;
 
-  --bg-main: #f7f7f7;
+  --bg-main: #f3f7f5;
   --bg-card: #ffffff;
-  --border-color: #e2e6ea;
-  --border-light: #f1f5f9;
+  --border-color: #dce8e3;
+  --border-light: #edf3f0;
 
-  --text-main: #212529;
-  --text-muted: #4b4b4b;
-  --text-light: #8a8f96;
-  --shadow-soft: rgba(15, 23, 42, 0.08);
+  --text-main: #17332e;
+  --text-muted: #64766f;
+  --text-light: #899a93;
+  --shadow-soft: rgba(22, 70, 59, 0.08);
 
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --radius-sm: 5px;
+  --radius-md: 9px;
+  --radius-lg: 12px;
   --radius-pill: 20px;
   --radius-full: 9999px;
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(22, 70, 59, 0.06), 0 1px 2px rgba(22, 70, 59, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(22, 70, 59, 0.07), 0 2px 4px -2px rgba(22, 70, 59, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(22, 70, 59, 0.08), 0 4px 6px -4px rgba(22, 70, 59, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(22, 70, 59, 0.1), 0 8px 10px -6px rgba(22, 70, 59, 0.05);
 
-  --font-sans: 'Open Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-display: 'Oswald', 'Open Sans', sans-serif;
+  --font-sans: 'Manrope', 'Segoe UI', sans-serif;
+  --font-display: 'Manrope', 'Segoe UI', sans-serif;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
@@ -69,18 +69,20 @@ html, body {
 }
 
 body[data-theme='dark'] {
-  --bg-main: #0f172a;
-  --bg-card: #111827;
-  --border-color: #334155;
-  --border-light: #1f2937;
-  --text-main: #f8fafc;
-  --text-muted: #dfe7f3;
-  --text-light: #b8c3d1;
-  --primary: #7dd3fc;
-  --primary-hover: #38bdf8;
-  --gov-blue-btn: #1d4ed8;
-  --gov-blue-dark: #0f172a;
-  --shadow-soft: rgba(2, 6, 23, 0.6);
+  --bg-main: #10211e;
+  --bg-card: #172d28;
+  --border-color: #2e4a42;
+  --border-light: #233d36;
+  --text-main: #e9f4ef;
+  --text-muted: #b4c8c0;
+  --text-light: #8fa79e;
+  --primary: #72d9c2;
+  --primary-hover: #55c9af;
+  --primary-light: rgba(45, 212, 191, 0.14);
+  --gov-blue-btn: #0f766e;
+  --gov-blue-dark: #102f2a;
+  --gov-red: #72d9c2;
+  --shadow-soft: rgba(0, 0, 0, 0.35);
   background: var(--bg-main);
   color: var(--text-main);
 }

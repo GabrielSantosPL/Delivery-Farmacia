@@ -342,7 +342,7 @@
 /* ============================================================== */
 .orders-grid {
   display: grid;
-  grid-templateColumns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 18px;
 }
 
@@ -558,39 +558,32 @@
   color: #ffffff;
 }
 
-.btn-start-route {
+.btn-start-route,
+.btn-finish-delivery {
   width: auto;
-  min-width: 180px;
-  flex: 1 1 180px;
-  background: #ea580c;
-  color: white;
-  border: none;
   padding: 10px 14px;
   border-radius: 10px;
+  border: none;
+  color: white;
   font-weight: 700;
   font-size: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
+}
+
+.btn-start-route {
+  min-width: 180px;
+  flex: 1 1 180px;
+  background: #ea580c;
   box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3);
 }
 
 .btn-finish-delivery {
-  width: auto;
   min-width: 170px;
   flex: 1 1 170px;
   background: #10b981;
-  color: white;
-  border: none;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-weight: 700;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
   box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
 }
 
@@ -621,7 +614,7 @@
 }
 
 /* ============================================================== */
-/* TABELAS E RESPONSIVIDADE */
+/* TABELAS E ESTOQUE */
 /* ============================================================== */
 .table-responsive-wrapper {
   width: 100%;
@@ -1226,6 +1219,59 @@ body[data-theme='dark'] .driver-summary-bar {
   margin-bottom: 22px;
 }
 
+.pharmacist-dashboard-layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 14px;
+}
+
+.pharmacist-dashboard-kpis {
+  grid-template-columns: 1fr;
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 0;
+}
+
+.pharmacist-dashboard-kpis .kpi-card {
+  min-height: 0;
+}
+
+.pharmacist-fleet-panel {
+  display: flex;
+  min-width: 0;
+  aspect-ratio: 5 / 4;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  box-shadow: var(--shadow-sm);
+}
+
+.pharmacist-fleet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  color: var(--text-main);
+}
+
+.pharmacist-fleet-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.pharmacist-fleet-header span {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.pharmacist-fleet-map {
+  display: flex;
+  flex: 1;
+}
+
 .kpi-card {
   background: #ffffff;
   border-radius: var(--radius-md);
@@ -1395,10 +1441,8 @@ body[data-theme='dark'] .driver-summary-bar {
 
 .new-order-form-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 24px;
-  width: min(100%, 920px);
-  margin: 0 auto;
 }
 
 .form-column-box {
@@ -2183,7 +2227,7 @@ body[data-theme='dark'] .driver-summary-bar {
 }
 
 /* ============================================================== */
-/* MODAL GERAL E RESPONSIVIDADE */
+/* MODAL GERAL */
 /* ============================================================== */
 .app-modal-backdrop {
   position: fixed;
@@ -2244,521 +2288,6 @@ body[data-theme='dark'] .driver-summary-bar {
 /* Esconde o botão "Contatos" por padrão (desktop). Aparece apenas em mobile via media queries abaixo. */
 .mobile-chat-back {
   display: none;
-}
-
-@media (max-width: 900px) {
-  .map-panel-split,
-  .modal-two-columns,
-  .verification-split-view,
-  .chat-modal-layout {
-    grid-template-columns: 1fr;
-    justify-self: center;
-  }
-
-  .mobile-chat-back button{
-
-    opacity: 100%;
-
-  }
-
-  .new-order-form-grid,
-  .role-cards-grid,
-  .result-checks-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .navbar-container {
-    flex-wrap: wrap;
-  }
-
-  .navbar-brand {
-    flex: 1 1 190px;
-  }
-
-  .navbar-actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .role-selector-btn {
-    max-width: 100%;
-  }
-
-  .role-selector-btn .user-details-tag {
-    min-width: 0;
-  }
-
-  .role-dropdown-menu {
-    right: auto;
-    left: 0;
-  }
-
-  .chat-modal-layout {
-    height: min(68vh, 620px);
-  }
-
-  .chat-contacts-sidebar {
-    max-height: 180px;
-    border-right: 0;
-    border-bottom: 1px solid var(--border-color);
-  }
-
-  .chat-rules-hint {
-    display: none;
-  }
-
-  .chat-conversation-panel {
-    min-height: 0;
-    flex: 1 1;
-  }
-
-  .filter-bar,
-  .stock-controls-bar {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .search-input-box {
-    width: 100%;
-  }
-}
-
-@media (max-width: 640px) {
-  .gov-topbar-inner {
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .gov-topbar-inner span + span::before {
-    display: none;
-  }
-
-  .gov-footer-inner {
-    flex-direction: column;
-    gap: 10px;
-    padding: 18px 14px;
-  }
-
-  .filter-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .filter-btn {
-    min-width: 0;
-  }
-
-  .driver-card-actions {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .btn-start-route,
-  .btn-finish-delivery {
-    width: 100%;
-    min-width: 0;
-    flex-basis: auto;
-  }
-
-  .citizen-card-footer {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .citizen-card-footer > button {
-    width: 100%;
-  }
-
-  .app-modal-backdrop {
-    align-items: flex-end;
-    padding: 0;
-  }
-
-  .app-modal-panel {
-    max-height: 94vh;
-    border-radius: 16px 16px 0 0;
-  }
-
-  .app-modal-body {
-    padding: 14px;
-  }
-
-  .navbar-container {
-    padding: 8px 12px;
-  }
-
-  .brand-logo-icon {
-    width: 42px;
-    height: 42px;
-  }
-
-  .brand-title {
-    font-size: 18px;
-  }
-
-  .brand-subtitle {
-    font-size: 10px;
-  }
-
-  .navbar-actions {
-    gap: 6px;
-  }
-
-  .navbar-icon-btn,
-  .role-selector-btn {
-    padding: 7px 9px;
-  }
-
-  .role-selector-btn .user-details-tag,
-  .role-selector-btn > svg {
-    display: none;
-  }
-
-  .role-selector-btn {
-    width: auto;
-  }
-
-  .chat-modal-layout {
-    height: calc(100dvh - 8px);
-    min-height: 430px;
-  }
-
-  .chat-contacts-sidebar {
-    width: 100%;
-    max-height: none;
-    border-right: 0;
-    border-bottom: 1px solid var(--border-color);
-  }
-
-  .contacts-list-scroll {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    flex-direction: row;
-    overflow: auto;
-    padding: 8px;
-    scrollbar-width: thin;
-  }
-
-  .contact-item-btn {
-    width: 100%;
-    min-width: 0;
-    padding: 8px;
-  }
-
-  .contact-item-meta {
-    min-width: 0;
-  }
-
-  .contact-item-name,
-  .contact-item-role {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .chat-rules-hint {
-    display: none;
-  }
-
-  .conversation-input-form {
-    flex-wrap: wrap;
-  }
-
-  .chat-text-input {
-    min-width: 100%;
-  }
-
-  .chat-send-btn {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .chat-message-bubble {
-    max-width: 94%;
-  }
-
-  .view-tabs-container {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .view-tab-btn {
-    justify-content: flex-start;
-    padding: 10px 12px;
-    font-size: 12px;
-  }
-
-  .view-tab-btn svg {
-    flex-shrink: 0;
-  }
-
-  .driver-summary-bar {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .driver-summary-stats {
-    justify-content: space-between;
-    gap: 5px 10px;
-  }
-
-  .driver-manager-chat-btn {
-    width: 100%;
-  }
-
-  .mobile-order-table td:nth-child(6) {
-    width: 100%;
-  }
-
-  .mobile-order-table .btn-table-action {
-    width: 100%;
-    min-width: 0;
-    flex-basis: auto;
-  }
-
-  /* Ajuste específico: permite que o botão de 'Auditoria' quebre o texto
-     e se ajuste ao tamanho da célula em telas pequenas, evitando overflow. */
-  .mobile-order-table td:nth-child(6) .btn-table-action {
-    width: auto !important;
-    max-width: calc(100% - 8px) !important;
-    white-space: normal !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    padding: 6px 8px !important;
-    box-sizing: border-box !important;
-    display: inline-block !important;
-    flex: 0 0 auto !important;
-  }
-
-  /* Garante que botões de ação em mobile não excedam a viewport
-     e que o texto seja truncado com reticências se necessário. */
-  .btn-table-action {
-    max-width: 100%;
-    min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .stock-section .search-input-box,
-  .manager-orders-section .search-input-box {
-    min-height: 42px;
-    padding-top: 5px;
-    padding-bottom: 5px;
-  }
-
-  .stock-section .search-input-box input,
-  .manager-orders-section .search-input-box input {
-    padding: 7px 0;
-  }
-
-  .mobile-chat-list .chat-contacts-sidebar {
-    display: flex;
-    min-height: 0;
-  }
-
-  .mobile-chat-list .chat-contacts-sidebar .contacts-sidebar-title {
-    padding: 9px 10px;
-  }
-
-  .mobile-chat-list .chat-conversation-panel {
-    display: none;
-  }
-
-  .mobile-chat-open .chat-contacts-sidebar {
-    display: none;
-  }
-
-  .mobile-chat-open .chat-conversation-panel {
-    display: flex;
-    min-height: 0;
-  }
-
-  .mobile-chat-back {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    border: 0;
-    background: transparent;
-    color: var(--primary);
-    font-size: 11px;
-    font-weight: 700;
-    padding: 4px;
-  }
-
-
-  .conversation-contact-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 0;
-    flex: 1;
-  }
-
-  .conversation-contact-header > div {
-    min-width: 0;
-  }
-
-  .conversation-contact-header strong,
-  .conversation-contact-header div div {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .contact-preview {
-    display: block;
-    max-width: 140px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: #64748b;
-    font-size: 10px;
-    margin-top: 2px;
-  }
-
-  .mobile-stock-table,
-  .mobile-order-table {
-    display: block;
-    width: 100%;
-  }
-
-  .mobile-stock-table thead,
-  .mobile-order-table thead {
-    display: none;
-  }
-
-  .mobile-stock-table tbody,
-  .mobile-stock-table tr,
-  .mobile-stock-table td,
-  .mobile-order-table tbody,
-  .mobile-order-table tr,
-  .mobile-order-table td {
-    display: block;
-    width: 100%;
-  }
-
-  .mobile-stock-table tr,
-  .mobile-order-table tr {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 9px;
-    padding: 14px;
-    border-bottom: 1px solid var(--border-color);
-  }
-
-  .mobile-stock-table td,
-  .mobile-order-table td {
-    padding: 0;
-    border: 0;
-    text-align: left;
-  }
-
-  .mobile-stock-table td::before,
-  .mobile-order-table td::before {
-    display: block;
-    margin-bottom: 2px;
-    color: var(--text-muted);
-    font-size: 9px;
-    font-weight: 800;
-    text-transform: uppercase;
-  }
-
-  .mobile-stock-table td:nth-child(1)::before { content: 'Medicamento'; }
-  .mobile-stock-table td:nth-child(2)::before { content: 'Forma / Classe'; }
-  .mobile-stock-table td:nth-child(3)::before { content: 'Controle'; }
-  .mobile-stock-table td:nth-child(4)::before { content: 'Lote / Validade'; }
-  .mobile-stock-table td:nth-child(5)::before { content: 'Estoque'; }
-  .mobile-stock-table td:nth-child(6)::before { content: 'Status'; }
-  .mobile-stock-table td:nth-child(7)::before { content: 'Ações'; }
-
-  .mobile-order-table td:nth-child(1)::before { content: 'Código'; }
-  .mobile-order-table td:nth-child(2)::before { content: 'Paciente e bairro'; }
-  .mobile-order-table td:nth-child(3)::before { content: 'Medicamentos'; }
-  .mobile-order-table td:nth-child(4)::before { content: 'Status'; }
-  .mobile-order-table td:nth-child(5)::before { content: 'Entregador'; }
-  .mobile-order-table td:nth-child(6)::before { content: 'Ações'; }
-
-  .mobile-stock-table td:nth-child(7),
-  .mobile-order-table td:nth-child(6) {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .mobile-stock-table .stock-number-adjuster {
-    width: auto;
-  }
-
-  .stock-controls-bar > .btn-primary,
-  .manager-stock-section .stock-controls-bar > .btn-primary,
-  .stock-section .stock-controls-bar > .btn-primary {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .stock-number-adjuster {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .stock-adjust-input {
-    flex: 1;
-    width: auto;
-  }
-
-  .role-switcher-wrapper {
-    display: none;
-  }
-
-  .mobile-bottom-bar {
-    display: block;
-  }
-
-  .view-container {
-    padding: 14px 12px calc(84px + var(--safe-bottom));
-  }
-
-  .view-header-card {
-    padding: 16px;
-  }
-
-  .header-info-group {
-    align-items: flex-start;
-  }
-
-  .header-title {
-    font-size: 19px;
-  }
-
-  .new-order-form-grid,
-  .modal-two-columns,
-  .verification-split-view {
-    grid-template-columns: 1fr;
-  }
-
-  .form-column-box {
-    padding: 16px;
-  }
-
-  .prescription-upload-box,
-  .verif-preview-box,
-  .verif-dropzone {
-    padding: 14px;
-  }
-
-  .verif-preview-box,
-  .verif-dropzone {
-    height: 220px;
-  }
-
-  .conversation-input-form {
-    padding: 10px;
-  }
-
-  .chat-message-bubble {
-    max-width: 88%;
-  }
 }
 
 /* ============================================================== */
@@ -2979,7 +2508,6 @@ body[data-theme='dark'] .driver-summary-bar {
   gap: 10px;
   padding: 10px;
   border-radius: 8px;
-  border: none;
   background: #ffffff;
   border: 1px solid transparent;
   text-align: left;
@@ -3046,70 +2574,70 @@ body[data-theme='dark'] .driver-summary-bar {
 }
 
 .conversation-header {
-    min-width: 0;
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-  }
+  min-width: 0;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
 
-  .conversation-contact-header {
-    min-width: 0;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+.conversation-contact-header {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 
-  .conversation-contact-details {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
+.conversation-contact-details {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 
-  .conversation-contact-details strong,
-  .conversation-contact-details > div {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+.conversation-contact-details strong,
+.conversation-contact-details > div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-  .conversation-contact-details strong {
-    font-size: 14px;
-    color: var(--text-main);
-  }
+.conversation-contact-details strong {
+  font-size: 14px;
+  color: var(--text-main);
+}
 
-  .conversation-contact-details > div {
-    font-size: 11px;
-    color: var(--text-muted);
-  }
+.conversation-contact-details > div {
+  font-size: 11px;
+  color: var(--text-muted);
+}
 
-  .chat-order-pill {
-    display: inline-flex;
-    width: fit-content;
-    max-width: 180px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    background: #f1f5f9;
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 12px;
-    color: #0284c7;
-  }
+.chat-order-pill {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: #f1f5f9;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 12px;
+  color: #0284c7;
+}
 
-  .conversation-messages-list {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 9px;
+.conversation-messages-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
 }
 
 .chat-empty-thread {
@@ -3423,10 +2951,8 @@ body[data-theme='dark'] .driver-summary-bar {
   max-width: 240px;
 }
 
-.btn-sim-valid {
-  background: #ecfdf5;
-  border: 1px solid #a7f3d0;
-  color: #047857;
+.btn-sim-valid,
+.btn-sim-invalid {
   padding: 6px 10px;
   border-radius: 6px;
   font-size: 11px;
@@ -3437,18 +2963,16 @@ body[data-theme='dark'] .driver-summary-bar {
   gap: 6px;
 }
 
+.btn-sim-valid {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #047857;
+}
+
 .btn-sim-invalid {
   background: #fff1f2;
   border: 1px solid #fecdd3;
   color: #be123c;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
 }
 
 .verif-loading-panel {
@@ -3601,3 +3125,1116 @@ body[data-theme='dark'] .driver-summary-bar {
   gap: 6px;
 }
 
+/* RESPONSIVIDADE */
+
+@media (max-width: 900px) {
+  .pharmacist-dashboard-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .pharmacist-fleet-panel {
+    width: min(100%, 520px);
+    justify-self: center;
+  }
+
+  .map-panel-split,
+  .modal-two-columns,
+  .verification-split-view,
+  .chat-modal-layout {
+    grid-template-columns: 1fr;
+    justify-self: center;
+  }
+
+  .new-order-form-grid,
+  .role-cards-grid,
+  .result-checks-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .navbar-container {
+    flex-wrap: wrap;
+  }
+
+  .navbar-brand {
+    flex: 1 1 190px;
+  }
+
+  .navbar-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .role-selector-btn {
+    max-width: 100%;
+  }
+
+  .role-selector-btn .user-details-tag {
+    min-width: 0;
+  }
+
+  .role-dropdown-menu {
+    right: auto;
+    left: 0;
+  }
+
+  .chat-modal-layout {
+    height: min(68vh, 620px);
+  }
+
+  .chat-contacts-sidebar {
+    max-height: 180px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .chat-rules-hint {
+    display: none;
+  }
+
+  .chat-conversation-panel {
+    min-height: 0;
+    flex: 1 1;
+  }
+
+  .filter-bar,
+  .stock-controls-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .search-input-box {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .gov-topbar-inner {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .gov-topbar-inner span + span::before {
+    display: none;
+  }
+
+  .gov-footer-inner {
+    flex-direction: column;
+    gap: 10px;
+    padding: 18px 14px;
+  }
+
+  .filter-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .filter-btn {
+    min-width: 0;
+  }
+
+  .driver-card-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .btn-start-route,
+  .btn-finish-delivery {
+    width: 100%;
+    min-width: 0;
+    flex-basis: auto;
+  }
+
+  .citizen-card-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .citizen-card-footer > button {
+    width: 100%;
+  }
+
+  .app-modal-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .app-modal-panel {
+    max-height: 94vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .app-modal-body {
+    padding: 14px;
+  }
+
+  .navbar-container {
+    padding: 8px 12px;
+  }
+
+  .brand-logo-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .brand-title {
+    font-size: 18px;
+  }
+
+  .brand-subtitle {
+    font-size: 10px;
+  }
+
+  .navbar-actions {
+    gap: 6px;
+  }
+
+  .navbar-icon-btn,
+  .role-selector-btn {
+    padding: 7px 9px;
+  }
+
+  .role-selector-btn .user-details-tag,
+  .role-selector-btn > svg {
+    display: none;
+  }
+
+  .role-selector-btn {
+    width: auto;
+  }
+
+  .chat-modal-layout {
+    height: calc(100dvh - 8px);
+    min-height: 430px;
+  }
+
+  .chat-contacts-sidebar {
+    width: 100%;
+    max-height: none;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .contacts-list-scroll {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex-direction: row;
+    overflow: auto;
+    padding: 8px;
+    scrollbar-width: thin;
+  }
+
+  .contact-item-btn {
+    width: 100%;
+    min-width: 0;
+    padding: 8px;
+  }
+
+  .contact-item-meta {
+    min-width: 0;
+  }
+
+  .contact-item-name,
+  .contact-item-role {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .conversation-input-form {
+    flex-wrap: wrap;
+  }
+
+  .chat-text-input {
+    min-width: 100%;
+  }
+
+  .chat-send-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .chat-message-bubble {
+    max-width: 94%;
+  }
+
+  .view-tabs-container {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .view-tab-btn {
+    justify-content: flex-start;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .view-tab-btn svg {
+    flex-shrink: 0;
+  }
+
+  .driver-summary-bar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .driver-summary-stats {
+    justify-content: space-between;
+    gap: 5px 10px;
+  }
+
+  .driver-manager-chat-btn {
+    width: 100%;
+  }
+
+  .mobile-order-table td:nth-child(6) {
+    width: 100%;
+  }
+
+  .mobile-order-table .btn-table-action {
+    width: 100%;
+    min-width: 0;
+    flex-basis: auto;
+  }
+
+  /* Ajuste específico: permite que o botão de 'Auditoria' quebre o texto
+     e se ajuste ao tamanho da célula em telas pequenas, evitando overflow. */
+  .mobile-order-table td:nth-child(6) .btn-table-action {
+    width: auto;
+    max-width: calc(100% - 8px);
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 6px 8px;
+    display: inline-block;
+    flex: 0 0 auto;
+  }
+
+  /* Garante que botões de ação em mobile não excedam a viewport
+     e que o texto seja truncado com reticências se necessário. */
+  .btn-table-action {
+    max-width: 100%;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stock-section .search-input-box,
+  .manager-orders-section .search-input-box {
+    min-height: 42px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  .stock-section .search-input-box input,
+  .manager-orders-section .search-input-box input {
+    padding: 7px 0;
+  }
+
+  .mobile-chat-list .chat-contacts-sidebar {
+    display: flex;
+    min-height: 0;
+  }
+
+  .mobile-chat-list .chat-contacts-sidebar .contacts-sidebar-title {
+    padding: 9px 10px;
+  }
+
+  .mobile-chat-list .chat-conversation-panel {
+    display: none;
+  }
+
+  .mobile-chat-open .chat-contacts-sidebar {
+    display: none;
+  }
+
+  .mobile-chat-open .chat-conversation-panel {
+    display: flex;
+    min-height: 0;
+  }
+
+  .mobile-chat-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 0;
+    background: transparent;
+    color: var(--primary);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px;
+  }
+
+
+  .conversation-contact-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .conversation-contact-header > div {
+    min-width: 0;
+  }
+
+  .conversation-contact-header strong,
+  .conversation-contact-header div div {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .contact-preview {
+    display: block;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #64748b;
+    font-size: 10px;
+    margin-top: 2px;
+  }
+
+  .mobile-stock-table,
+  .mobile-order-table {
+    display: block;
+    width: 100%;
+  }
+
+  .mobile-stock-table thead,
+  .mobile-order-table thead {
+    display: none;
+  }
+
+  .mobile-stock-table tbody,
+  .mobile-stock-table tr,
+  .mobile-stock-table td,
+  .mobile-order-table tbody,
+  .mobile-order-table tr,
+  .mobile-order-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .mobile-stock-table tr,
+  .mobile-order-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+    padding: 14px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .mobile-stock-table td,
+  .mobile-order-table td {
+    padding: 0;
+    border: 0;
+    text-align: left;
+  }
+
+  .mobile-stock-table td::before,
+  .mobile-order-table td::before {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .mobile-stock-table td:nth-child(1)::before { content: 'Medicamento'; }
+  .mobile-stock-table td:nth-child(2)::before { content: 'Forma / Classe'; }
+  .mobile-stock-table td:nth-child(3)::before { content: 'Controle'; }
+  .mobile-stock-table td:nth-child(4)::before { content: 'Lote / Validade'; }
+  .mobile-stock-table td:nth-child(5)::before { content: 'Estoque'; }
+  .mobile-stock-table td:nth-child(6)::before { content: 'Status'; }
+  .mobile-stock-table td:nth-child(7)::before { content: 'Ações'; }
+
+  .mobile-order-table td:nth-child(1)::before { content: 'Código'; }
+  .mobile-order-table td:nth-child(2)::before { content: 'Paciente e bairro'; }
+  .mobile-order-table td:nth-child(3)::before { content: 'Medicamentos'; }
+  .mobile-order-table td:nth-child(4)::before { content: 'Status'; }
+  .mobile-order-table td:nth-child(5)::before { content: 'Entregador'; }
+  .mobile-order-table td:nth-child(6)::before { content: 'Ações'; }
+
+  .mobile-stock-table td:nth-child(7),
+  .mobile-order-table td:nth-child(6) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mobile-stock-table .stock-number-adjuster {
+    width: auto;
+  }
+
+  .stock-controls-bar > .btn-primary,
+  .manager-stock-section .stock-controls-bar > .btn-primary,
+  .stock-section .stock-controls-bar > .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .stock-number-adjuster {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .stock-adjust-input {
+    flex: 1;
+    width: auto;
+  }
+
+  .role-switcher-wrapper {
+    display: none;
+  }
+
+  .mobile-bottom-bar {
+    display: block;
+  }
+
+  .view-container {
+    padding: 14px 12px calc(84px + var(--safe-bottom));
+  }
+
+  .view-header-card {
+    padding: 16px;
+  }
+
+  .header-info-group {
+    align-items: flex-start;
+  }
+
+  .header-title {
+    font-size: 19px;
+  }
+
+  .new-order-form-grid,
+  .modal-two-columns,
+  .verification-split-view {
+    grid-template-columns: 1fr;
+  }
+
+  .form-column-box {
+    padding: 16px;
+  }
+
+  .prescription-upload-box,
+  .verif-preview-box,
+  .verif-dropzone {
+    padding: 14px;
+  }
+
+  .verif-preview-box,
+  .verif-dropzone {
+    height: 220px;
+  }
+
+  .conversation-input-form {
+    padding: 10px;
+  }
+
+  .chat-message-bubble {
+    max-width: 88%;
+  }
+}
+
+/* Identidade visual verde das telas de Saúde Ativa */
+body:not([data-theme='dark']) .brand-logo-icon {
+  background: linear-gradient(135deg, #eff8f4, #dcefe8);
+  box-shadow: 0 4px 10px rgba(8, 127, 115, 0.16);
+}
+
+body:not([data-theme='dark']) .role-selector-btn,
+body:not([data-theme='dark']) .navbar-icon-btn,
+body:not([data-theme='dark']) .action-btn-secondary {
+  background-color: #f7faf8;
+  border-color: var(--border-color);
+}
+
+body:not([data-theme='dark']) .role-selector-btn:hover,
+body:not([data-theme='dark']) .navbar-icon-btn:hover,
+body:not([data-theme='dark']) .action-btn-secondary:hover {
+  background-color: #eaf4ef;
+  border-color: #c3ddd2;
+}
+
+body:not([data-theme='dark']) .view-tab-btn:not(.active),
+body:not([data-theme='dark']) .filter-btn:not(.active) {
+  background: #edf5f1;
+  color: var(--text-muted);
+}
+
+body:not([data-theme='dark']) .view-tab-btn:not(.active):hover,
+body:not([data-theme='dark']) .filter-btn:not(.active):hover {
+  background: #dfeee8;
+  color: var(--primary);
+}
+
+body:not([data-theme='dark']) .btn-evaluate,
+body:not([data-theme='dark']) .btn-quick-pulse,
+body:not([data-theme='dark']) .btn-chat-manager-shortcut,
+body:not([data-theme='dark']) .btn-edit-stock,
+body:not([data-theme='dark']) .btn-table-action,
+body:not([data-theme='dark']) .btn-chat-patient-pill,
+body:not([data-theme='dark']) .btn-view-prescription-link,
+body:not([data-theme='dark']) .btn-track-order,
+body:not([data-theme='dark']) .btn-map-shortcut {
+  background: var(--primary-light);
+  color: var(--primary);
+  border-color: #c4dfd5;
+}
+
+body:not([data-theme='dark']) .btn-evaluate:hover,
+body:not([data-theme='dark']) .btn-quick-pulse:hover,
+body:not([data-theme='dark']) .btn-chat-manager-shortcut:hover,
+body:not([data-theme='dark']) .btn-edit-stock:hover,
+body:not([data-theme='dark']) .btn-table-action:hover,
+body:not([data-theme='dark']) .btn-chat-patient-pill:hover {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+}
+
+body:not([data-theme='dark']) .patient-box,
+body:not([data-theme='dark']) .meds-list-box,
+body:not([data-theme='dark']) .data-info-card,
+body:not([data-theme='dark']) .filter-bar,
+body:not([data-theme='dark']) .add-med-widget,
+body:not([data-theme='dark']) .basket-item-row,
+body:not([data-theme='dark']) .driver-monitor-card,
+body:not([data-theme='dark']) .map-panel-sidebar,
+body:not([data-theme='dark']) .gps-control-bar,
+body:not([data-theme='dark']) .map-route-legend {
+  border-color: var(--border-color);
+}
+
+body:not([data-theme='dark']) .patient-box,
+body:not([data-theme='dark']) .meds-list-box,
+body:not([data-theme='dark']) .data-info-card,
+body:not([data-theme='dark']) .add-med-widget,
+body:not([data-theme='dark']) .basket-item-row,
+body:not([data-theme='dark']) .driver-monitor-card,
+body:not([data-theme='dark']) .custom-table th {
+  background-color: #f6faf8;
+}
+
+body:not([data-theme='dark']) .custom-table tr:hover {
+  background-color: #f2f8f5;
+}
+
+body:not([data-theme='dark']) .user-role-badge {
+  color: var(--primary) !important;
+  background-color: var(--primary-light) !important;
+}
+
+body[data-theme='dark'] .view-tab-btn.active,
+body[data-theme='dark'] .btn-start-route,
+body[data-theme='dark'] .btn-jump-order,
+body[data-theme='dark'] .btn-confirm-delivery-submit,
+body[data-theme='dark'] .btn-file-picker,
+body[data-theme='dark'] .stop-number-badge {
+  background: var(--gov-blue-btn);
+  color: #f0fdfa;
+  border-color: transparent;
+}
+
+body[data-theme='dark'] .btn-start-route {
+  box-shadow: 0 4px 10px rgba(15, 118, 110, 0.32);
+}
+
+body[data-theme='dark'] .contact-item-btn.active {
+  background: rgba(45, 212, 191, 0.12);
+  border-color: rgba(114, 217, 194, 0.5);
+}
+
+body[data-theme='dark'] .outgoing-bubble,
+body[data-theme='dark'] .chat-message-bubble.outgoing {
+  background: var(--gov-blue-btn);
+  color: #f0fdfa;
+}
+
+body[data-theme='dark'] .chat-order-pill,
+body[data-theme='dark'] .queue-stats-badge,
+body[data-theme='dark'] .notif-counter-badge {
+  background: rgba(45, 212, 191, 0.14);
+  color: var(--primary);
+  border-color: rgba(114, 217, 194, 0.28);
+}
+
+body[data-theme='dark'] .code-display-box {
+  background: rgba(45, 212, 191, 0.12);
+  color: var(--text-main);
+  border-color: var(--primary);
+}
+
+body[data-theme='dark'] .btn-add-item-list:hover,
+body[data-theme='dark'] .btn-quick-adjust:hover,
+body[data-theme='dark'] .btn-evaluate:hover,
+body[data-theme='dark'] .btn-chat-patient-pill:hover,
+body[data-theme='dark'] .btn-chat-manager-shortcut:hover {
+  background: var(--gov-blue-btn);
+  color: #f0fdfa;
+  border-color: var(--primary);
+}
+
+body[data-theme='dark'] .btn-simulate-trigger,
+body[data-theme='dark'] .btn-quick-adjust:hover,
+body[data-theme='dark'] .btn-add-item-list {
+  color: var(--primary);
+  border-color: var(--border-color);
+}
+
+body[data-theme='dark'] .check-indicator,
+body[data-theme='dark'] .bubble-author,
+body[data-theme='dark'] .btn-mark-all-read,
+body[data-theme='dark'] .chat-order-pill {
+  color: var(--primary);
+}
+
+body[data-theme='dark'] [style*="color: rgb(2, 132, 199)"],
+body[data-theme='dark'] [style*="color: #0284c7"],
+body[data-theme='dark'] [style*="color: rgb(3, 105, 161)"],
+body[data-theme='dark'] [style*="color: #0369a1"],
+body[data-theme='dark'] svg[color="#0284c7"] {
+  color: var(--primary) !important;
+}
+
+body[data-theme='dark'] [style*="background-color: rgb(224, 242, 254)"],
+body[data-theme='dark'] [style*="background: rgb(224, 242, 254)"],
+body[data-theme='dark'] [style*="background: #e0f2fe"] {
+  background: rgba(45, 212, 191, 0.14) !important;
+  border-color: rgba(114, 217, 194, 0.28) !important;
+}
+
+body[data-theme='dark'] [style*="background-color: rgb(2, 132, 199)"],
+body[data-theme='dark'] [style*="background: rgb(2, 132, 199)"],
+body[data-theme='dark'] [style*="background: #0284c7"] {
+  background: var(--gov-blue-btn) !important;
+}
+
+body[data-theme='dark'] .custom-hub-icon div,
+body[data-theme='dark'] .custom-dest-icon > div:first-child {
+  background: var(--gov-blue-btn) !important;
+  box-shadow: 0 4px 10px rgba(15, 118, 110, 0.5) !important;
+}
+
+body[data-theme='dark'] .leaflet-popup-content [style*="#0284c7"],
+body[data-theme='dark'] .leaflet-overlay-pane path[style*="#0284c7"] {
+  color: var(--primary) !important;
+  stroke: var(--gov-blue-btn) !important;
+}
+
+body[data-theme='dark'] .role-option-item.active,
+body[data-theme='dark'] .btn-evaluate,
+body[data-theme='dark'] .login-tag-location,
+body[data-theme='dark'] .btn-view-prescription-link {
+  background: rgba(45, 212, 191, 0.14);
+  color: var(--primary);
+  border-color: rgba(114, 217, 194, 0.3);
+}
+
+body[data-theme='dark'] .role-card-btn.role-farmaceutico:hover {
+  background: rgba(45, 212, 191, 0.1);
+  border-color: var(--primary);
+}
+
+body[data-theme='dark'] .verif-loading-panel {
+  background: rgba(45, 212, 191, 0.1);
+  border-color: rgba(114, 217, 194, 0.3);
+  color: var(--primary);
+}
+
+.citizen-delivery-code {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--primary);
+  border-radius: 6px;
+  background: var(--primary-light);
+}
+
+.citizen-delivery-code strong {
+  color: var(--text-main);
+  font-size: 12px;
+}
+
+.citizen-delivery-code p {
+  margin: 2px 0 0;
+  color: var(--text-muted);
+  font-size: 11px;
+}
+
+.citizen-delivery-code-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 6px 9px;
+  border: 1px dashed var(--primary);
+  border-radius: 6px;
+  color: var(--primary);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.citizen-delivery-code-summary {
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border-left-width: 4px;
+}
+
+.citizen-delivery-code-summary .citizen-delivery-code-value {
+  padding: 8px 12px;
+  font-size: 17px;
+}
+
+.citizen-delivery-code.is-pending {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--text-light);
+}
+
+.citizen-delivery-code-pending {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.delivery-code-instruction {
+  margin: 0 0 4px;
+  color: var(--text-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+.stock-resolution-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid #e8c87d;
+  border-radius: 8px;
+  background: #fff9e9;
+}
+
+.stock-resolution-box > strong {
+  color: #59431b;
+  font-size: 13px;
+}
+
+.stock-resolution-box > p {
+  margin: 0;
+  color: #675b43;
+  font-size: 12px;
+}
+
+.stock-resolution-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 5px;
+}
+
+.btn-stock-choice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+}
+
+.btn-stock-choice.primary {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.btn-stock-choice.cancel {
+  border-color: #efc1c1;
+  color: #a73737;
+}
+
+.stock-decision-waiting {
+  gap: 4px;
+  border-color: #e8c87d;
+  background: #fff9e9;
+}
+
+.stock-decision-waiting strong {
+  color: #59431b;
+}
+
+.stock-decision-waiting span {
+  color: #675b43;
+  font-size: 12px;
+}
+
+.pharmacist-medicine-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: #f7faf8;
+}
+
+.pharmacist-medicine-results {
+  max-height: 180px;
+  overflow-y: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--bg-card);
+}
+
+.pharmacist-medicine-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 7px 9px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.pharmacist-medicine-result:last-child {
+  border-bottom: 0;
+}
+
+.pharmacist-medicine-result > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.pharmacist-medicine-result strong {
+  color: var(--text-main);
+  font-size: 12px;
+}
+
+.pharmacist-medicine-result span {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.btn-add-medicine-to-order,
+.btn-remove-order-medicine {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 5px 7px;
+  border: 1px solid var(--primary);
+  border-radius: 5px;
+  background: var(--bg-card);
+  color: var(--primary);
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.btn-add-medicine-to-order:disabled {
+  border-color: var(--border-color);
+  color: var(--text-muted);
+  cursor: default;
+  opacity: 0.7;
+}
+
+.pharmacist-order-items {
+  gap: 0;
+}
+
+.pharmacist-order-item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.pharmacist-order-item-row:last-child {
+  border-bottom: 0;
+}
+
+.pharmacist-order-item-details {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.pharmacist-order-item-details > strong {
+  color: var(--text-main);
+  font-size: 12px;
+}
+
+.pharmacist-order-item-details > label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.pharmacist-order-item-details .form-input {
+  min-width: 0;
+  padding: 5px 7px;
+  font-size: 11px;
+}
+
+.pharmacist-order-item-details .pharmacist-item-quantity {
+  width: 82px;
+  flex: 0 0 82px;
+}
+
+.btn-remove-order-medicine {
+  align-self: flex-start;
+  border-color: #efc1c1;
+  background: transparent;
+  color: #a73737;
+}
+
+.pharmacist-empty-order-items {
+  padding: 8px 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.medicine-stock-classifier {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+  color: var(--text-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.medicine-stock-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.medicine-stock-choice {
+  min-height: 28px;
+  padding: 4px 7px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  background: var(--bg-card);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.medicine-stock-choice.selected.available {
+  border-color: #80c8a6;
+  background: #e7f5ed;
+  color: #26734b;
+}
+
+.medicine-stock-choice.selected.shortage {
+  border-color: #e9aaaa;
+  background: #fff0f0;
+  color: #a73737;
+}
+
+body[data-theme='dark'] .stock-resolution-box,
+body[data-theme='dark'] .stock-decision-waiting {
+  border-color: #796844;
+  background: rgba(121, 104, 68, 0.16);
+}
+
+body[data-theme='dark'] .stock-resolution-box > strong,
+body[data-theme='dark'] .stock-decision-waiting strong {
+  color: #f1dfb5;
+}
+
+body[data-theme='dark'] .stock-resolution-box > p,
+body[data-theme='dark'] .stock-decision-waiting span {
+  color: #d1c5a4;
+}
+
+body[data-theme='dark'] .btn-stock-choice:not(.primary):not(.cancel) {
+  border-color: var(--border-color);
+  background: var(--bg-card);
+  color: var(--text-main);
+}
+
+body[data-theme='dark'] .btn-stock-choice.cancel {
+  border-color: rgba(239, 154, 154, 0.4);
+  background: rgba(185, 62, 62, 0.12);
+  color: #f2aaaa;
+}
+
+.medicine-stock-choice:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+body[data-theme='dark'] .medicine-stock-choice {
+  background: var(--bg-card);
+  color: var(--text-muted);
+}
+
+body[data-theme='dark'] .medicine-stock-choice.selected.available {
+  border-color: rgba(114, 217, 194, 0.55);
+  background: rgba(45, 212, 191, 0.14);
+  color: var(--primary);
+}
+
+body[data-theme='dark'] .medicine-stock-choice.selected.shortage {
+  border-color: rgba(239, 154, 154, 0.55);
+  background: rgba(185, 62, 62, 0.16);
+  color: #f2aaaa;
+}
+
+body[data-theme='dark'] .pharmacist-medicine-picker {
+  border-color: var(--border-color);
+  background: var(--bg-card);
+}
+
+body[data-theme='dark'] .pharmacist-medicine-results {
+  background: var(--bg-main);
+}
+
+body[data-theme='dark'] .pharmacist-medicine-result {
+  border-color: var(--border-color);
+}
+
+@media (max-width: 640px) {
+  .item-audit-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .pharmacist-order-item-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .medicine-stock-classifier {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 420px) {
+  .citizen-delivery-code {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

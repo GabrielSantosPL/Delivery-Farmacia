@@ -6,13 +6,11 @@ import Badge from '../components/Badge';
 import Modal from '../components/Modal';
 import LeafletMap from '../components/LeafletMap';
 import ChatModal from '../components/ChatModal';
-import { generateInvalidDocumentSvg } from '../mock/mockPrescriptions';
 import { DRIVER_CANCELLATION_REASONS } from '../mock/mockData';
 import { optimizeDeliveryQueue } from '../utils/routeOptimizer';
-import { comparePrescriptions, simulateCapturedPrescriptionPhoto } from '../utils/prescriptionValidator';
 import { 
   Navigation, CheckCircle, Camera, MapPin, Phone, 
-  Package, Upload, Crosshair, AlertCircle, Sparkles, 
+  Package, Crosshair, AlertCircle, Sparkles, 
   Eye, XCircle, MessageSquare, Bell, ShieldCheck, 
   AlertTriangle, Layers
 } from 'lucide-react';
@@ -29,9 +27,8 @@ export default function DriverView() {
   
   // Estado para Finalizar Entrega com Conferência
   const [selectedOrderToDeliver, setSelectedOrderToDeliver] = useState(null);
-  const [deliveryPhoto, setDeliveryPhoto] = useState(null);
   const [deliveryConfirmationCode, setDeliveryConfirmationCode] = useState('');
-  const [photoError, setPhotoError] = useState('');
+  const [deliveryError, setDeliveryError] = useState('');
 
   // Estado para Cancelamento de Entrega
   const [orderToCancel, setOrderToCancel] = useState(null);
@@ -80,72 +77,28 @@ export default function DriverView() {
     );
   };
 
-  // Processa upload ou simulação de foto e roda a verificação comparativa
-  const handlePhotoCaptured = async (photoUrl) => {
-    setDeliveryPhoto(photoUrl);
-    setPhotoError('');
-    setIsComparing(true);
-    setComparisonResult(null);
-
-    const result = await comparePrescriptions(
-      selectedOrderToDeliver?.prescriptionUrl,
-      photoUrl,
-      selectedOrderToDeliver
-    );
-
-    setIsComparing(false);
-    setComparisonResult(result);
-    if (!result.isValid) {
-      setPhotoError(result.message);
-    }
-  };
-
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        handlePhotoCaptured(reader.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  // Simular foto correta (mesma receita, com enquadramento e carimbo diferentes)
-  const handleSimulateValidPhoto = async () => {
-    if (!selectedOrderToDeliver?.prescriptionUrl) return;
-    const validPhoto = await simulateCapturedPrescriptionPhoto(selectedOrderToDeliver.prescriptionUrl);
-    handlePhotoCaptured(validPhoto);
-  };
-
-  // Simular foto inválida (outro documento) para testar rejeição
-  const handleSimulateInvalidPhoto = () => {
-    const invalidPhoto = generateInvalidDocumentSvg();
-    handlePhotoCaptured(invalidPhoto);
-  };
-
-  // Finalizar entrega
+  // Finalizar entrega após validar o código informado pelo cliente
   const handleConfirmDelivery = () => {
-    if (!deliveryPhoto) {
-      setPhotoError('É obrigatório anexar a foto da receita física recolhida.');
-      return;
-    }
-
     const code = (deliveryConfirmationCode || '').trim().toUpperCase();
     if (!code) {
-      setPhotoError('É obrigatório informar o código de confirmação informado pelo receptor para concluir a entrega.');
+      setDeliveryError('Informe o código de confirmação fornecido pelo receptor.');
       return;
     }
 
-    if (selectedOrderToDeliver?.deliveryCode && code !== selectedOrderToDeliver.deliveryCode.toUpperCase()) {
-      setPhotoError('Código de confirmação inválido. Peça ao destinatário que informe o código correto.');
+    if (!selectedOrderToDeliver?.deliveryCode) {
+      setDeliveryError('Este pedido ainda não possui código de confirmação. Solicite apoio à farmácia.');
       return;
     }
 
-    completeOrderDelivery(selectedOrderToDeliver.id, deliveryPhoto, code);
+    if (code !== selectedOrderToDeliver.deliveryCode.trim().toUpperCase()) {
+      setDeliveryError('Código de confirmação inválido. Peça ao destinatário que informe o código correto.');
+      return;
+    }
+
+    completeOrderDelivery(selectedOrderToDeliver.id, null, code);
     setSelectedOrderToDeliver(null);
-    setDeliveryPhoto(null);
     setDeliveryConfirmationCode('');
+    setDeliveryError('');
     alert(`Entrega ${selectedOrderToDeliver.id} validada e confirmada com sucesso!`);
   };
 
@@ -357,9 +310,8 @@ export default function DriverView() {
                             className="btn-finish-delivery"
                             onClick={() => {
                               setSelectedOrderToDeliver(order);
-                              setDeliveryPhoto(null);
                               setDeliveryConfirmationCode('');
-                              setPhotoError('');
+                              setDeliveryError('');
                             }}
                           >
                             <Camera size={16} />
@@ -382,7 +334,7 @@ export default function DriverView() {
                         </>
                       )}
 
-                      {isDelivered && (
+                      {isDelivered && order.deliveryProofPhoto && (
                         <button
                           type="button"
                           className="btn-view-proof"
@@ -448,9 +400,8 @@ export default function DriverView() {
                       className="btn-jump-order"
                       onClick={() => {
                         setSelectedOrderToDeliver(stop.order);
-                        setDeliveryPhoto(null);
                         setDeliveryConfirmationCode('');
-                        setPhotoError('');
+                        setDeliveryError('');
                       }}
                     >
                       <Camera size={14} />
@@ -540,67 +491,37 @@ export default function DriverView() {
               <div>
                 <strong>Confirmação de Entrega por Código:</strong>
                 <p>
-                  Solicite ao receptor <b>{selectedOrderToDeliver.patient?.name}</b> que informe o código de entrega. Depois, registre a foto da receita física recolhida e confirme a entrega.
+                  Solicite ao receptor <b>{selectedOrderToDeliver.patient?.name}</b> que informe o código de entrega. A confirmação não exige foto da receita.
                 </p>
               </div>
             </div>
 
-            <div className="verification-split-view">
-              <div className="verif-side">
-                <span className="verif-label">1. Código de confirmação do cliente</span>
-                <div className="verif-preview-box" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-                  <div className="code-display-box">{selectedOrderToDeliver.deliveryCode || 'CÓDIGO-123'}</div>
-                  <input
-                    className="form-input"
-                    value={deliveryConfirmationCode}
-                    onChange={(e) => setDeliveryConfirmationCode(e.target.value.toUpperCase())}
-                    placeholder="Informe o código recebido"
-                    maxLength={12}
-                    style={{ width: '100%', marginTop: '12px', textTransform: 'uppercase' }}
-                  />
-                </div>
-              </div>
-
-              <div className="verif-side">
-                <span className="verif-label">2. Foto da receita física recolhida</span>
-                {deliveryPhoto ? (
-                  <div className="verif-preview-box">
-                    <img src={deliveryPhoto} alt="Foto Capturada" />
-                    <button
-                      type="button"
-                      className="btn-change-photo-mini"
-                      onClick={() => setDeliveryPhoto(null)}
-                    >
-                      Trocar Foto
-                    </button>
-                  </div>
-                ) : (
-                  <div className="verif-dropzone">
-                    <Camera size={36} color="#94a3b8" />
-                    <p>Fotografe a receita física entregue pelo paciente</p>
-
-                    <div className="photo-actions-stack">
-                      <label className="btn-file-picker">
-                        <Upload size={15} />
-                        <span>Câmera / Arquivo</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          capture="environment"
-                          style={{ display: 'none' }}
-                          onChange={handleFileUpload}
-                        />
-                      </label>
-                    </div>
-                  </div>
-                )}
-              </div>
+            <div className="delivery-code-verification">
+              <label className="verif-label" htmlFor="delivery-confirmation-code">
+                Código de confirmação do cliente
+              </label>
+              <p className="delivery-code-instruction">
+                Peça o código ao cliente. O código correto não é exibido nesta tela.
+              </p>
+              <input
+                id="delivery-confirmation-code"
+                className="form-input"
+                value={deliveryConfirmationCode}
+                onChange={(e) => {
+                  setDeliveryConfirmationCode(e.target.value.toUpperCase());
+                  setDeliveryError('');
+                }}
+                placeholder="Informe o código recebido"
+                maxLength={6}
+                autoComplete="one-time-code"
+                style={{ textTransform: 'uppercase' }}
+              />
             </div>
 
-            {photoError && (
+            {deliveryError && (
               <div className="login-error-alert" style={{ marginTop: '10px' }}>
                 <AlertCircle size={16} />
-                <span>{photoError}</span>
+                <span>{deliveryError}</span>
               </div>
             )}
 
@@ -617,8 +538,8 @@ export default function DriverView() {
                 type="button"
                 className="btn-confirm-delivery-submit"
                 onClick={handleConfirmDelivery}
-                disabled={!deliveryPhoto || !deliveryConfirmationCode.trim()}
-                style={{ opacity: (!deliveryPhoto || !deliveryConfirmationCode.trim()) ? 0.6 : 1 }}
+                disabled={!deliveryConfirmationCode.trim()}
+                style={{ opacity: !deliveryConfirmationCode.trim() ? 0.6 : 1 }}
               >
                 <CheckCircle size={18} />
                 <span>Confirmar Entrega</span>

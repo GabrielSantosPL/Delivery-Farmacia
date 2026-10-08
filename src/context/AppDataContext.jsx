@@ -12,18 +12,63 @@ const DRIVERS_KEY = 'med_del_drivers_v2';
 const CHAT_KEY = 'med_del_chat_v2';
 const NOTIF_KEY = 'med_del_notif_v2';
 
+const getTimestamp = () => new Date().toISOString();
+const createFollowUpOrderId = () => `PED-${new Date().getFullYear()}-${Date.now()}`;
+
 const generateDeliveryCode = () => {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   return Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+};
+
+const ensureActiveDeliveryCodes = (orders) => {
+  let changed = false;
+  const normalizedOrders = orders.map(order => {
+    const isAwaitingDelivery = [ORDER_STATUS.PRONTO_ENTREGA, ORDER_STATUS.EM_TRANSITO].includes(order.status);
+    if (isAwaitingDelivery && !order.deliveryCode) {
+      changed = true;
+      return { ...order, deliveryCode: generateDeliveryCode() };
+    }
+    return order;
+  });
+
+  return changed ? normalizedOrders : orders;
+};
+
+const migrateWaitingStockChoices = (orders, inventory) => {
+  let changed = false;
+  const normalizedOrders = orders.map(order => {
+    if (order.status !== ORDER_STATUS.PENDENTE_ESTOQUE || order.stockResolution !== 'waiting') {
+      return order;
+    }
+
+    const sourceItems = order.stockReviewedItems || order.items || [];
+    const reviewedItems = sourceItems.map(item => {
+      const stockItem = inventory.find(medicine => medicine.id === item.medicineId);
+      const available = stockItem && Number(stockItem.currentStock || 0) >= Number(item.quantity || 0);
+      return { ...item, stockAvailability: available ? 'available' : 'shortage' };
+    });
+    const availableItems = reviewedItems.filter(item => item.stockAvailability === 'available');
+    const shortageItems = reviewedItems.filter(item => !availableItems.some(available => available.medicineId === item.medicineId));
+    changed = true;
+    return {
+      ...order,
+      stockResolution: 'waiting_customer_choice',
+      stockReviewedItems: reviewedItems,
+      availableItems,
+      shortageItems
+    };
+  });
+
+  return changed ? normalizedOrders : orders;
 };
 
 export function AppDataProvider({ children }) {
   const [orders, setOrders] = useState(() => {
     const saved = localStorage.getItem(ORDERS_KEY);
     if (saved) {
-      try { return JSON.parse(saved); } catch { /* ignore */ }
+      try { return ensureActiveDeliveryCodes(JSON.parse(saved)); } catch { /* ignore */ }
     }
-    return INITIAL_ORDERS;
+    return ensureActiveDeliveryCodes(INITIAL_ORDERS);
   });
 
   const [inventory, setInventory] = useState(() => {
@@ -57,6 +102,11 @@ export function AppDataProvider({ children }) {
     }
     return INITIAL_NOTIFICATIONS;
   });
+
+  useEffect(() => {
+    const normalizedOrders = migrateWaitingStockChoices(ensureActiveDeliveryCodes(orders), inventory);
+    if (normalizedOrders !== orders) setOrders(normalizedOrders);
+  }, [orders, inventory]);
 
   // Sync to localStorage
   useEffect(() => {
@@ -241,159 +291,259 @@ export function AppDataProvider({ children }) {
     }));
   };
 
-  // Aprovar Pedido (Farmacêutico)
+  // Farmácia revisa o estoque e encaminha a decisão para o cliente.
   const approveOrder = (orderId, pharmacistName, options = {}) => {
-    const { selectedItems = null, shortageAction = 'full' } = options;
+    const { selectedItems = null, availabilityByMedicineId = {} } = options;
     const targetOrder = orders.find(order => order.id === orderId);
     if (!targetOrder) return false;
 
-    const finalItems = selectedItems && selectedItems.length ? selectedItems : targetOrder.items;
-    const shortageItems = finalItems.filter(item => {
-      const stockItem = inventory.find(m => m.id === item.medicineId);
-      if (!stockItem) return false;
-      return Number(item.quantity || 0) > Number(stockItem.currentStock || 0);
+    const hasEnoughStock = item => {
+      const stockItem = inventory.find(medicine => medicine.id === item.medicineId);
+      return stockItem && Number(stockItem.currentStock || 0) >= Number(item.quantity || 0);
+    };
+    const requestedItems = selectedItems?.length ? selectedItems : targetOrder.items;
+    if (!requestedItems?.length) {
+      alert('A farmácia precisa adicionar ao menos um medicamento identificado na receita antes de aprovar o pedido.');
+      return false;
+    }
+    const reviewedItems = requestedItems.map(item => {
+      const physicallyAvailable = hasEnoughStock(item);
+      const requestedAvailability = availabilityByMedicineId[item.medicineId] || (physicallyAvailable ? 'available' : 'shortage');
+      return {
+        ...item,
+        stockAvailability: physicallyAvailable && requestedAvailability === 'available' ? 'available' : 'shortage'
+      };
     });
+    const availableItems = reviewedItems.filter(item => item.stockAvailability === 'available');
+    const shortageItems = reviewedItems.filter(item => item.stockAvailability === 'shortage');
 
-    if (shortageItems.length > 0 && shortageAction === 'full') {
-      setOrders(prev => prev.map(order => {
-        if (order.id !== orderId) return order;
-        return {
-          ...order,
-          status: ORDER_STATUS.PENDENTE_ESTOQUE,
-          stockResolution: 'waiting',
-          shortageItems,
-          history: [
-            ...order.history,
-            {
-              status: ORDER_STATUS.PENDENTE_ESTOQUE,
-              time: new Date().toISOString(),
-              note: `Pedido aguardando decisão do cliente porque faltam medicamentos: ${shortageItems.map(item => item.name).join(', ')}.`
-            }
-          ]
-        };
+    if (targetOrder.stockResolution === 'awaiting_restock' && shortageItems.length > 0) {
+      alert('O pedido complementar continuará aguardando a reposição dos medicamentos em falta.');
+      return false;
+    }
+
+    if (shortageItems.length > 0) {
+      const now = getTimestamp();
+      const clientMessage = [
+        `No pedido ${orderId}, a farmácia identificou medicamentos disponíveis e em falta.`,
+        `Disponíveis agora: ${availableItems.map(item => item.name).join(', ') || 'nenhum'}.`,
+        `Em falta: ${shortageItems.map(item => item.name).join(', ')}.`,
+        'Abra Meus Pedidos para escolher entre entrega parcial com pedido complementar, entrega parcial sem complemento ou cancelamento total.'
+      ].join(' ');
+
+      setOrders(prev => prev.map(order => order.id !== orderId ? order : {
+        ...order,
+        status: ORDER_STATUS.PENDENTE_ESTOQUE,
+        stockResolution: 'waiting_customer_choice',
+        stockReviewedBy: pharmacistName,
+        stockReviewedItems: reviewedItems,
+        availableItems,
+        shortageItems,
+        history: [
+          ...order.history,
+          {
+            status: ORDER_STATUS.PENDENTE_ESTOQUE,
+            time: now,
+            note: `Farmácia conferiu o estoque. Disponíveis: ${availableItems.map(item => item.name).join(', ') || 'nenhum'}. Em falta: ${shortageItems.map(item => item.name).join(', ')}. Aguardando escolha do cliente.`
+          }
+        ]
       }));
 
       addNotification({
         userId: targetOrder.patient?.id || 'user-cliente',
-        title: '⚠️ Falta de medicamento no pedido',
-        message: `No pedido ${orderId}, alguns itens estão fora de estoque. Escolha como deseja receber o restante.`,
+        title: '⚠️ Escolha como receber seu pedido',
+        message: clientMessage,
         type: 'order',
-        orderId: orderId
+        orderId
       });
-      return { needsResolution: true, shortageItems };
+      return { needsResolution: true, availableItems, shortageItems };
     }
 
-    if (shortageAction === 'cancel') {
-      setOrders(prev => prev.map(order => {
-        if (order.id !== orderId) return order;
-        return {
-          ...order,
-          status: ORDER_STATUS.RECUSADO,
-          validatedBy: pharmacistName,
-          validatedAt: new Date().toISOString(),
-          rejectionReason: 'Pedido cancelado pela gestão farmacêutica por indisponibilidade de itens críticos.',
-          history: [
-            ...order.history,
-            {
-              status: ORDER_STATUS.RECUSADO,
-              time: new Date().toISOString(),
-              note: `Pedido cancelado por indisponibilidade de itens. ${pharmacistName} orientou o cliente.`
-            }
-          ]
-        };
-      }));
-      addNotification({
-        userId: targetOrder.patient?.id || 'user-cliente',
-        title: '❌ Pedido cancelado',
-        message: `Seu pedido ${orderId} foi cancelado porque alguns medicamentos não podem ser dispensados no momento.`,
-        type: 'order',
-        orderId: orderId
-      });
-      return true;
-    }
+    return releaseApprovedOrder(targetOrder, reviewedItems, pharmacistName);
+  };
 
-    const availableItems = finalItems.filter(item => {
-      const stockItem = inventory.find(m => m.id === item.medicineId);
-      return !stockItem || Number(item.quantity || 0) <= Number(stockItem.currentStock || 0);
-    });
-
+  const releaseApprovedOrder = (targetOrder, items, pharmacistName) => {
+    const now = getTimestamp();
     const driver = drivers[0];
     const deliveryCode = targetOrder.deliveryCode || generateDeliveryCode();
 
-    setInventory(prevInv => prevInv.map(item => {
-      const reqItem = availableItems.find(i => i.medicineId === item.id);
-      if (!reqItem) return item;
+    setInventory(prevInventory => prevInventory.map(stockItem => {
+      const requestedItem = items.find(item => item.medicineId === stockItem.id);
+      if (!requestedItem) return stockItem;
       return {
-        ...item,
-        currentStock: Math.max(0, Number(item.currentStock || 0) - Number(reqItem.quantity || 0))
+        ...stockItem,
+        currentStock: Math.max(0, Number(stockItem.currentStock || 0) - Number(requestedItem.quantity || 0))
       };
     }));
 
-    const nextOrder = {
+    const releasedOrder = {
       ...targetOrder,
-      items: availableItems,
+      items,
       deliveryCode,
       status: ORDER_STATUS.PRONTO_ENTREGA,
-      validatedBy: pharmacistName,
-      validatedAt: new Date().toISOString(),
-      assignedDriverId: driver ? driver.id : null,
-      assignedDriverName: driver ? driver.name : null,
+      stockResolution: targetOrder.stockResolution === 'awaiting_restock'
+        ? 'restocked_and_released'
+        : targetOrder.stockResolution || 'complete',
+      validatedBy: targetOrder.stockReviewedBy || pharmacistName,
+      validatedAt: targetOrder.validatedAt || now,
+      assignedDriverId: driver?.id || null,
+      assignedDriverName: driver?.name || null,
       history: [
         ...targetOrder.history,
         {
-          status: ORDER_STATUS.APROVADO,
-          time: new Date().toISOString(),
-          note: `Receita validada e aprovada por ${pharmacistName}. Estoque reservado.`
-        },
-        {
           status: ORDER_STATUS.PRONTO_ENTREGA,
-          time: new Date().toISOString(),
-          note: `Pedido separado na Farmácia Central. Aguardando coleta do motoboy ${driver ? driver.name : ''}. Código de entrega: ${deliveryCode}.`
+          time: now,
+          note: `Pedido separado na Farmácia Central. Aguardando coleta do motoboy ${driver?.name || ''}. Código de entrega: ${deliveryCode}.`
         }
       ]
     };
 
-    setOrders(prev => {
-      const withoutCurrent = prev.filter(order => order.id !== orderId);
-      const followUpItems = shortageItems.length > 0 ? shortageItems : [];
-
-      if (shortageAction === 'open_new' && followUpItems.length > 0) {
-        const followUpOrder = {
-          ...targetOrder,
-          id: `PED-2026-${String(prev.length + 1).padStart(3, '0')}`,
-          createdAt: new Date().toISOString(),
-          items: followUpItems,
-          status: ORDER_STATUS.PENDENTE_VALIDACAO,
-          assignedDriverId: null,
-          assignedDriverName: null,
-          validatedBy: null,
-          validatedAt: null,
-          rejectionReason: null,
-          placementReason: 'Pedido complementar por falta de estoque no item principal.',
-          deliveryCode: generateDeliveryCode(),
-          history: [
-            {
-              status: ORDER_STATUS.PENDENTE_VALIDACAO,
-              time: new Date().toISOString(),
-              note: `Pedido complementar gerado por indisponibilidade temporária do(s) item(ns) ${followUpItems.map(item => item.name).join(', ')}.`
-            }
-          ]
-        };
-
-        return [nextOrder, followUpOrder, ...withoutCurrent];
-      }
-
-      return [nextOrder, ...withoutCurrent];
-    });
-
+    setOrders(prev => prev.map(order => order.id === targetOrder.id ? releasedOrder : order));
     addNotification({
       userId: targetOrder.patient?.id || 'user-cliente',
-      title: '✅ Receita Médica Aprovada!',
-      message: `Seu pedido ${orderId} foi conferido e liberado pela farmácia. Código de confirmação: ${deliveryCode}.`,
+      title: '✅ Pedido liberado para entrega',
+      message: `Seu pedido ${targetOrder.id} foi liberado. Código de confirmação: ${deliveryCode}.`,
       type: 'order',
-      orderId: orderId
+      orderId: targetOrder.id
     });
+    return true;
+  };
 
+  const resolveStockShortage = (orderId, resolution) => {
+    const targetOrder = orders.find(order => order.id === orderId);
+    if (targetOrder?.stockResolution !== 'waiting_customer_choice') return false;
+
+    const reviewedItems = targetOrder.stockReviewedItems || targetOrder.items;
+    const reviewedAvailableIds = new Set((targetOrder.availableItems || []).map(item => item.medicineId));
+    const availableItems = reviewedItems.filter(item => {
+      const stockItem = inventory.find(medicine => medicine.id === item.medicineId);
+      return reviewedAvailableIds.has(item.medicineId)
+        && stockItem
+        && Number(stockItem.currentStock || 0) >= Number(item.quantity || 0);
+    });
+    const shortageItems = reviewedItems.filter(item => !availableItems.some(available => available.medicineId === item.medicineId));
+    const now = new Date().toISOString();
+
+    if (resolution === 'cancel') {
+      setOrders(prev => prev.map(order => order.id !== orderId ? order : {
+        ...order,
+        status: ORDER_STATUS.CANCELADO_CLIENTE,
+        stockResolution: 'cancelled_by_customer',
+        cancelledAt: now,
+        cancellationReason: 'Cancelado pelo cliente devido à falta de medicamentos.',
+        history: [
+          ...order.history,
+          {
+            status: ORDER_STATUS.CANCELADO_CLIENTE,
+            time: now,
+            note: 'Cliente cancelou o pedido após receber as opções para falta de estoque.'
+          }
+        ]
+      }));
+      addNotification({
+        userId: targetOrder.patient?.id || 'user-cliente',
+        title: 'Pedido cancelado',
+        message: `O pedido ${orderId} foi cancelado conforme sua escolha.`,
+        type: 'order',
+        orderId
+      });
+      return true;
+    }
+
+    if (!['deliver_and_reorder', 'deliver_available_only'].includes(resolution)) return false;
+
+    if (availableItems.length === 0) {
+      setOrders(prev => prev.map(order => order.id !== orderId ? order : {
+        ...order,
+        items: shortageItems,
+        stockResolution: 'awaiting_restock',
+        customerStockChoice: resolution,
+        history: [
+          ...order.history,
+          {
+            status: ORDER_STATUS.PENDENTE_ESTOQUE,
+            time: now,
+            note: 'Nenhum item está disponível para entrega imediata. O pedido permanece aguardando estoque conforme escolha do cliente.'
+          }
+        ]
+      }));
+      addNotification({
+        userId: targetOrder.patient?.id || 'user-cliente',
+        title: 'Pedido aguardando reposição',
+        message: `Nenhum item do pedido ${orderId} está disponível para entrega imediata. O pedido permanece aguardando estoque, sem criar um pedido complementar vazio.`,
+        type: 'order',
+        orderId
+      });
+      return true;
+    }
+
+    const driver = drivers[0];
+    const deliveryCode = generateDeliveryCode();
+    const releasedOrder = {
+      ...targetOrder,
+      items: availableItems,
+      deliveryCode,
+      status: ORDER_STATUS.PRONTO_ENTREGA,
+      stockResolution: resolution,
+      shortageItems,
+      validatedBy: targetOrder.stockReviewedBy,
+      validatedAt: now,
+      assignedDriverId: driver?.id || null,
+      assignedDriverName: driver?.name || null,
+      history: [
+        ...targetOrder.history,
+        {
+          status: ORDER_STATUS.PRONTO_ENTREGA,
+          time: now,
+          note: `Cliente escolheu receber os itens disponíveis. Código de entrega: ${deliveryCode}.`
+        }
+      ]
+    };
+
+    setInventory(prevInventory => prevInventory.map(stockItem => {
+      const requestedItem = availableItems.find(item => item.medicineId === stockItem.id);
+      if (!requestedItem) return stockItem;
+      return {
+        ...stockItem,
+        currentStock: Math.max(0, Number(stockItem.currentStock || 0) - Number(requestedItem.quantity || 0))
+      };
+    }));
+
+    const followUpOrder = resolution === 'deliver_and_reorder' && shortageItems.length > 0
+      ? {
+          ...targetOrder,
+          id: createFollowUpOrderId(),
+          createdAt: now,
+          items: shortageItems,
+          status: ORDER_STATUS.PENDENTE_ESTOQUE,
+          stockResolution: 'awaiting_restock',
+          customerStockChoice: resolution,
+          parentOrderId: orderId,
+          assignedDriverId: null,
+          assignedDriverName: null,
+          deliveryCode: null,
+          validatedBy: targetOrder.stockReviewedBy,
+          validatedAt: now,
+          history: [
+            {
+              status: ORDER_STATUS.PENDENTE_ESTOQUE,
+              time: now,
+              note: `Pedido complementar criado por escolha do cliente. Aguardando reposição: ${shortageItems.map(item => item.name).join(', ')}.`
+            }
+          ]
+        }
+      : null;
+
+    setOrders(prev => [releasedOrder, ...(followUpOrder ? [followUpOrder] : []), ...prev.filter(order => order.id !== orderId)]);
+    addNotification({
+      userId: targetOrder.patient?.id || 'user-cliente',
+      title: '✅ Escolha registrada',
+      message: resolution === 'deliver_and_reorder'
+        ? `O pedido ${orderId} seguirá para entrega com os itens disponíveis. ${shortageItems.length > 0 ? `Criamos o pedido complementar ${followUpOrder.id}, que aguardará a reposição dos itens faltantes.` : 'Todos os itens foram encontrados em estoque.'} Código para receber: ${deliveryCode}.`
+        : `O pedido ${orderId} seguirá para entrega somente com os itens disponíveis. Os medicamentos em falta não serão incluídos em outro pedido. Código para receber: ${deliveryCode}.`,
+      type: 'order',
+      orderId
+    });
     return true;
   };
 
@@ -673,7 +823,7 @@ export function AppDataProvider({ children }) {
 
   // Restaurar dados iniciais
   const resetToDefaults = () => {
-    setOrders(INITIAL_ORDERS);
+    setOrders(ensureActiveDeliveryCodes(INITIAL_ORDERS));
     setInventory(MOCK_MEDICINES);
     setDrivers(MOCK_DRIVERS);
     setChatMessages(INITIAL_CHAT_MESSAGES);
@@ -699,6 +849,7 @@ export function AppDataProvider({ children }) {
       startOrderDelivery,
       cancelOrderDelivery,
       completeOrderDelivery,
+      resolveStockShortage,
       assignDriverToOrder,
       updateStock,
       adjustStockDelta,
