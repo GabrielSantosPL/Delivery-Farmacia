@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { MOCK_USERS, USER_ROLES } from '../mock/mockData';
+import { removeAccidentalUserProfiles } from '../utils/userProfileCleanup';
 
 const AuthContext = createContext();
 
@@ -11,24 +12,25 @@ export function AuthProvider({ children }) {
     const saved = localStorage.getItem(STORAGE_KEY_USERS_LIST);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        return removeAccidentalUserProfiles(JSON.parse(saved));
       } catch {
         // fallback
       }
     }
-    return MOCK_USERS;
+    return removeAccidentalUserProfiles(MOCK_USERS);
   });
 
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem(STORAGE_KEY_USER);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const savedUser = JSON.parse(saved);
+        return removeAccidentalUserProfiles([savedUser])[0] || users[0] || null;
       } catch {
-        return null;
+        return users[0] || null;
       }
     }
-    return users[0] || MOCK_USERS[0] || null;
+    return users[0] || null;
   });
 
   // Salva lista de usuários
