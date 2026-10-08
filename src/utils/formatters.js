@@ -40,6 +40,15 @@ export function getStatusInfo(status) {
         border: '#bae6fd',
         icon: '📋'
       };
+    case 'PENDENTE_ESTOQUE':
+      return {
+        label: 'Aguardando Decisão do Cliente',
+        color: 'badge-warning',
+        bg: '#fef3c7',
+        text: '#92400e',
+        border: '#fde68a',
+        icon: '📦'
+      };
     case 'PRONTO_ENTREGA':
       return {
         label: 'Pronto para Coleta',

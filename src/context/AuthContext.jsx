@@ -28,7 +28,7 @@ export function AuthProvider({ children }) {
         return null;
       }
     }
-    return users[0] || MOCK_USERS[0];
+    return users[0] || MOCK_USERS[0] || null;
   });
 
   // Salva lista de usuários
@@ -102,10 +102,10 @@ export function AuthProvider({ children }) {
     setCurrentUser(null);
   };
 
-  // Cadastrar Novo Usuário (Restrito ao Gestor)
+  // Cadastrar Novo Usuário (Restrito ao Farmacêutico)
   const registerUser = (userData) => {
-    if (!currentUser || currentUser.role !== USER_ROLES.GERENTE) {
-      return { success: false, error: 'Acesso negado: Apenas o Gestor Municipal tem autorização para cadastrar novos usuários no sistema.' };
+    if (!currentUser || currentUser.role !== USER_ROLES.FARMACEUTICO) {
+      return { success: false, error: 'Acesso negado: Apenas o farmacêutico tem autorização para cadastrar novos usuários no sistema.' };
     }
 
     if (!userData.name || !userData.role || !userData.email) {
@@ -115,7 +115,6 @@ export function AuthProvider({ children }) {
     const roleAvatars = {
       [USER_ROLES.FARMACEUTICO]: '👩‍⚕️',
       [USER_ROLES.ENTREGADOR]: '🛵',
-      [USER_ROLES.GERENTE]: '👨‍💼',
       [USER_ROLES.CLIENTE]: '👤'
     };
 
@@ -143,10 +142,10 @@ export function AuthProvider({ children }) {
     return { success: true, user: newUser };
   };
 
-  // Excluir Usuário (Restrito ao Gestor)
+  // Excluir Usuário (Restrito ao Farmacêutico)
   const deleteUser = (userId) => {
-    if (!currentUser || currentUser.role !== USER_ROLES.GERENTE) {
-      return { success: false, error: 'Apenas o Gestor Municipal pode excluir usuários.' };
+    if (!currentUser || currentUser.role !== USER_ROLES.FARMACEUTICO) {
+      return { success: false, error: 'Apenas o farmacêutico pode excluir usuários.' };
     }
     if (userId === currentUser.id) {
       return { success: false, error: 'Não é possível excluir o próprio usuário logado.' };

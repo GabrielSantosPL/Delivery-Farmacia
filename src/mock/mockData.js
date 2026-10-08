@@ -5,7 +5,6 @@ import { MOCK_DRIVERS, INDAIATUBA_HUB } from './indaiatubaLocations';
 export const USER_ROLES = {
   FARMACEUTICO: 'farmaceutico',
   ENTREGADOR: 'entregador',
-  GERENTE: 'gerente',
   CLIENTE: 'cliente'
 };
 
@@ -30,14 +29,6 @@ export const MOCK_USERS = [
     avatar: '🛵'
   },
   {
-    id: 'user-gerente',
-    name: 'Dr. Rogério Meireles',
-    role: USER_ROLES.GERENTE,
-    email: 'gestao.saude@indaiatuba.sp.gov.br',
-    cargo: 'Coordenador de Assistência Farmacêutica e Logística',
-    avatar: '👨‍💼'
-  },
-  {
     id: 'user-cliente',
     name: 'Maria Aparecida Santos',
     role: USER_ROLES.CLIENTE,
@@ -54,13 +45,14 @@ export const MOCK_USERS = [
 ];
 
 export const ORDER_STATUS = {
-  PENDENTE_VALIDACAO: 'PENDENTE_VALIDACAO', // Farmacêutico precisa avaliar
-  APROVADO: 'APROVADO', // Farmacêutico aprovou, em separação
-  PRONTO_ENTREGA: 'PRONTO_ENTREGA', // Aguardando motoboy coletar
-  EM_TRANSITO: 'EM_TRANSITO', // Motoboy a caminho
-  ENTREGUE: 'ENTREGUE', // Concluído com foto
-  RECUSADO: 'RECUSADO', // Recusado pelo farmacêutico com motivo
-  CANCELADO_ENTREGADOR: 'CANCELADO_ENTREGADOR' // Cancelado pelo motoboy com motivo
+  PENDENTE_VALIDACAO: 'PENDENTE_VALIDACAO',
+  PENDENTE_ESTOQUE: 'PENDENTE_ESTOQUE',
+  APROVADO: 'APROVADO',
+  PRONTO_ENTREGA: 'PRONTO_ENTREGA',
+  EM_TRANSITO: 'EM_TRANSITO',
+  ENTREGUE: 'ENTREGUE',
+  RECUSADO: 'RECUSADO',
+  CANCELADO_ENTREGADOR: 'CANCELADO_ENTREGADOR'
 };
 
 export const DRIVER_CANCELLATION_REASONS = [
@@ -304,36 +296,36 @@ export const INITIAL_ORDERS = [
 export const INITIAL_CHAT_MESSAGES = [
   {
     id: 'msg-001',
-    fromUserId: 'user-gerente',
-    fromUserName: 'Dr. Rogério Meireles (Gestor)',
-    fromUserRole: USER_ROLES.GERENTE,
-    toUserId: 'user-farm',
-    toUserName: 'Dra. Camila Sampaio',
-    text: 'Dra. Camila, precisamos de atenção especial na liberação dos antibióticos da UBS Morada do Sol hoje.',
+    fromUserId: 'user-farm',
+    fromUserName: 'Dra. Camila Sampaio',
+    fromUserRole: USER_ROLES.FARMACEUTICO,
+    toUserId: 'user-motoboy',
+    toUserName: 'Carlos Eduardo (Carlinhos)',
+    text: 'Carlos, priorize o pedido PED-2026-001 no Jardim Morada do Sol antes do almoço.',
     timestamp: '2026-10-07T08:20:00',
     read: true
   },
   {
     id: 'msg-002',
-    fromUserId: 'user-gerente',
-    fromUserName: 'Dr. Rogério Meireles (Gestor)',
-    fromUserRole: USER_ROLES.GERENTE,
-    toUserId: 'user-motoboy',
-    toUserName: 'Carlos Eduardo (Carlinhos)',
-    text: 'Carlos, priorize o pedido PED-2026-001 no Jardim Morada do Sol antes do almoço.',
+    fromUserId: 'user-farm',
+    fromUserName: 'Dra. Camila Sampaio',
+    fromUserRole: USER_ROLES.FARMACEUTICO,
+    toUserId: 'user-cliente',
+    toUserName: 'Maria Aparecida Santos',
+    text: 'Olá Sra. Maria! A equipe da farmácia municipal já conferiu sua receita e o pedido segue em processo de entrega.',
     timestamp: '2026-10-07T08:25:00',
-    read: true
+    read: false
   },
   {
     id: 'msg-003',
-    fromUserId: 'user-gerente',
-    fromUserName: 'Dr. Rogério Meireles (Gestor)',
-    fromUserRole: USER_ROLES.GERENTE,
-    toUserId: 'user-cliente',
-    toUserName: 'Maria Aparecida Santos',
-    text: 'Olá Sra. Maria! A equipe da Prefeitura de Indaiatuba está à disposição caso precise de auxílio com a entrega de seus remédios.',
+    fromUserId: 'user-motoboy',
+    fromUserName: 'Carlos Eduardo (Carlinhos)',
+    fromUserRole: USER_ROLES.ENTREGADOR,
+    toUserId: 'user-farm',
+    toUserName: 'Dra. Camila Sampaio',
+    text: 'Farmácia, já estamos saindo com o pedido e vou confirmar o código de entrega ao paciente.',
     timestamp: '2026-10-07T08:28:00',
-    read: false
+    read: true
   },
   {
     id: 'msg-004',
@@ -372,7 +364,7 @@ export const INITIAL_NOTIFICATIONS = [
   },
   {
     id: 'notif-003',
-    userId: 'user-gerente',
+    userId: 'user-farm',
     title: 'Alerta de Estoque Baixo',
     message: 'Sertralina Cloridrato 50mg atingiu nível crítico (28 unidades restantes).',
     type: 'stock',

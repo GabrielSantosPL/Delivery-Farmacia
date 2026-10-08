@@ -42,14 +42,21 @@
 .brand-logo-icon {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #0047ab, #0b3aaf);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  overflow: hidden;
   flex-shrink: 0;
   box-shadow: 0 4px 10px rgba(11, 58, 175, 0.25);
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+}
+
+.brand-logo-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .brand-texts {
@@ -702,6 +709,331 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+}
+
+/* ============================================================== */
+/* AJUSTES DE ACESSIBILIDADE E TEMA ESCURO */
+/* ============================================================== */
+body[data-theme='dark'] .heading,
+body[data-theme='dark'] .header-title,
+body[data-theme='dark'] .brand-title,
+body[data-theme='dark'] .login-title,
+body[data-theme='dark'] .box-title,
+body[data-theme='dark'] .order-code,
+body[data-theme='dark'] .patient-name,
+body[data-theme='dark'] .med-item-name,
+body[data-theme='dark'] .city-header,
+body[data-theme='dark'] .role-opt-name,
+body[data-theme='dark'] .user-name-text,
+body[data-theme='dark'] .kpi-value,
+body[data-theme='dark'] .driver-card-name,
+body[data-theme='dark'] .stop-details strong {
+  color: var(--text-main);
+}
+
+body[data-theme='dark'] .patient-box,
+body[data-theme='dark'] .meds-list-box,
+body[data-theme='dark'] .data-info-card,
+body[data-theme='dark'] .filter-bar,
+body[data-theme='dark'] .rejection-box-alert,
+body[data-theme='dark'] .selected-meds-basket,
+body[data-theme='dark'] .queue-stop-card,
+body[data-theme='dark'] .driver-monitor-card,
+body[data-theme='dark'] .box-title-card,
+body[data-theme='dark'] .track-box {
+  background-color: rgba(15, 23, 42, 0.8);
+}
+
+body[data-theme='dark'] .order-card,
+body[data-theme='dark'] .view-header-card,
+body[data-theme='dark'] .kpi-card,
+body[data-theme='dark'] .driver-monitor-card,
+body[data-theme='dark'] .route-queue-summary-card,
+body[data-theme='dark'] .tracking-summary-card {
+  background: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+body[data-theme='dark'] .action-btn-secondary,
+body[data-theme='dark'] .action-btn-logout,
+body[data-theme='dark'] .view-tab-btn,
+body[data-theme='dark'] .btn-secondary {
+  background: rgba(15, 23, 42, 0.72);
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+body[data-theme='dark'] .view-tab-btn {
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+}
+
+body[data-theme='dark'] .view-tab-btn:hover {
+  background: rgba(30, 41, 59, 0.96);
+  color: #f8fafc;
+}
+
+body[data-theme='dark'] .view-tab-btn.active {
+  background: #0ea5e9;
+  color: #f8fafc;
+}
+
+body[data-theme='dark'] .action-btn-secondary:hover,
+body[data-theme='dark'] .action-btn-logout:hover,
+body[data-theme='dark'] .btn-secondary:hover {
+  background: rgba(51, 65, 85, 0.9);
+  color: #f8fafc;
+}
+
+body[data-theme='dark'] .action-btn-logout:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+body[data-theme='dark'] .rejection-box-alert {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+body[data-theme='dark'] .rejection-box-alert strong {
+  color: #7f1d1d;
+}
+
+body[data-theme='dark'] .header-subtitle,
+body[data-theme='dark'] .order-date,
+body[data-theme='dark'] .patient-meta,
+body[data-theme='dark'] .med-item-qty,
+body[data-theme='dark'] .role-card-detail,
+body[data-theme='dark'] .login-subtitle,
+body[data-theme='dark'] .quick-access-desc,
+body[data-theme='dark'] .box-desc,
+body[data-theme='dark'] .driver-specs,
+body[data-theme='dark'] .contact-item-role,
+body[data-theme='dark'] .contact-preview,
+body[data-theme='dark'] .role-card-tag {
+  color: var(--text-muted);
+}
+
+.code-display-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 160px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: #dbeafe;
+  color: #0f172a;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  border: 2px dashed #60a5fa;
+  font-size: 1.1rem;
+}
+
+body[data-theme='dark'] .code-display-box {
+  background: rgba(96, 165, 250, 0.15);
+  color: var(--text-main);
+  border-color: #60a5fa;
+}
+
+body[data-theme='dark'] .filter-btn {
+  background: rgba(15, 23, 42, 0.8);
+  color: #f8fafc;
+  border-color: var(--border-color);
+}
+
+body[data-theme='dark'] .filter-btn:hover,
+body[data-theme='dark'] .filter-btn.active {
+  background: var(--gov-blue-btn);
+  color: #ffffff;
+  border-color: var(--gov-blue-btn);
+}
+
+body[data-theme='dark'] .btn-chat-patient-pill,
+body[data-theme='dark'] .btn-chat-manager-shortcut,
+body[data-theme='dark'] .btn-view-proof,
+body[data-theme='dark'] .btn-start-route,
+body[data-theme='dark'] .btn-notify-proximity,
+body[data-theme='dark'] .btn-cancel-delivery,
+body[data-theme='dark'] .btn-gps-trigger,
+body[data-theme='dark'] .btn-simulate-trigger,
+body[data-theme='dark'] .btn-jump-order,
+body[data-theme='dark'] .btn-file-picker,
+body[data-theme='dark'] .btn-confirm-delivery-submit {
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+body[data-theme='dark'] .btn-start-route,
+body[data-theme='dark'] .btn-jump-order,
+body[data-theme='dark'] .btn-confirm-delivery-submit,
+body[data-theme='dark'] .btn-file-picker {
+  background: #0ea5e9;
+  color: #f8fafc;
+  border-color: transparent;
+}
+
+body[data-theme='dark'] .btn-chat-patient-pill,
+body[data-theme='dark'] .btn-chat-manager-shortcut,
+body[data-theme='dark'] .btn-view-proof,
+body[data-theme='dark'] .btn-gps-trigger,
+body[data-theme='dark'] .btn-simulate-trigger,
+body[data-theme='dark'] .btn-notify-proximity {
+  background: rgba(15, 23, 42, 0.8);
+}
+
+body[data-theme='dark'] .btn-view-proof:hover,
+body[data-theme='dark'] .btn-chat-patient-pill:hover,
+body[data-theme='dark'] .btn-chat-manager-shortcut:hover,
+body[data-theme='dark'] .btn-gps-trigger:hover,
+body[data-theme='dark'] .btn-simulate-trigger:hover {
+  background: rgba(30, 41, 59, 0.95);
+}
+
+body[data-theme='dark'] .driver-summary-bar,
+body[data-theme='dark'] .map-route-legend,
+body[data-theme='dark'] .route-queue-summary-card,
+body[data-theme='dark'] .queue-stop-card,
+body[data-theme='dark'] .fleet-overview-panel,
+body[data-theme='dark'] .chat-modal-layout,
+body[data-theme='dark'] .chat-contacts-sidebar,
+body[data-theme='dark'] .chat-conversation-panel,
+body[data-theme='dark'] .conversation-header,
+body[data-theme='dark'] .conversation-input-form,
+body[data-theme='dark'] .chat-rules-hint,
+body[data-theme='dark'] .contact-item-btn,
+body[data-theme='dark'] .delivery-verification-modal,
+body[data-theme='dark'] .verif-preview-box,
+body[data-theme='dark'] .verif-dropzone,
+body[data-theme='dark'] .gps-control-bar,
+body[data-theme='dark'] .gps-status-indicator,
+body[data-theme='dark'] .chat-no-selection,
+body[data-theme='dark'] .app-modal-panel {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+body[data-theme='dark'] .app-modal-header {
+  background: rgba(15, 23, 42, 0.9);
+  border-bottom-color: var(--border-color);
+}
+
+body[data-theme='dark'] .contact-item-btn {
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--text-main);
+}
+
+body[data-theme='dark'] .contact-item-btn.active {
+  background: rgba(14, 165, 233, 0.12);
+  border-color: rgba(125, 211, 252, 0.65);
+}
+
+body[data-theme='dark'] .conversation-messages-list,
+body[data-theme='dark'] .chat-empty-thread,
+body[data-theme='dark'] .chat-order-pill,
+body[data-theme='dark'] .chat-message-bubble.incoming,
+body[data-theme='dark'] .incoming-bubble {
+  background: rgba(15, 23, 42, 0.72);
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+body[data-theme='dark'] .chat-message-bubble.incoming,
+body[data-theme='dark'] .incoming-bubble {
+  background: rgba(30, 41, 59, 0.9);
+}
+
+body[data-theme='dark'] .chat-message-bubble.outgoing,
+body[data-theme='dark'] .outgoing-bubble {
+  background: #0ea5e9;
+  color: #f8fafc;
+}
+
+body[data-theme='dark'] .chat-order-pill {
+  background: rgba(14, 165, 233, 0.12);
+  color: #bae6fd;
+}
+
+body[data-theme='dark'] .prescription-frame,
+body[data-theme='dark'] .data-info-card,
+body[data-theme='dark'] .prescription-caption,
+body[data-theme='dark'] .verification-split-view,
+body[data-theme='dark'] .verif-preview-box,
+body[data-theme='dark'] .verif-dropzone,
+body[data-theme='dark'] .comparison-result-card,
+body[data-theme='dark'] .rejection-box-alert {
+  background: var(--bg-card);
+  color: var(--text-main);
+  border-color: var(--border-color);
+}
+
+body[data-theme='dark'] .prescription-frame,
+body[data-theme='dark'] .data-info-card,
+body[data-theme='dark'] .verif-preview-box,
+body[data-theme='dark'] .verif-dropzone {
+  box-shadow: inset 0 0 0 1px var(--border-color);
+}
+
+body[data-theme='dark'] .prescription-caption,
+body[data-theme='dark'] .driver-summary-stats,
+body[data-theme='dark'] .legend-item,
+body[data-theme='dark'] .contact-item-role,
+body[data-theme='dark'] .contact-preview,
+body[data-theme='dark'] .chat-rules-hint,
+body[data-theme='dark'] .rejection-box-alert strong,
+body[data-theme='dark'] .bubble-author,
+body[data-theme='dark'] .patient-meta,
+body[data-theme='dark'] .order-date,
+body[data-theme='dark'] .med-item-qty,
+body[data-theme='dark'] .header-subtitle {
+  color: var(--text-muted);
+}
+
+body[data-theme='dark'] .queue-stats-badge {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+body[data-theme='dark'] .fleet-overview-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+body[data-theme='dark'] .fleet-overview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  color: var(--text-main);
+}
+
+body[data-theme='dark'] .fleet-overview-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+body[data-theme='dark'] .fleet-overview-header span {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+body[data-theme='dark'] .map-wrapper {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+body[data-theme='dark'] .gps-control-bar,
+body[data-theme='dark'] .gps-status-indicator,
+body[data-theme='dark'] .map-route-legend,
+body[data-theme='dark'] .route-queue-summary-card,
+body[data-theme='dark'] .queue-stop-card,
+body[data-theme='dark'] .driver-summary-bar {
+  box-shadow: 0 0 0 1px var(--border-color);
 }
 
 /* ============================================================== */
@@ -2741,6 +3073,16 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .conversation-contact-details strong {
+    font-size: 14px;
+    color: var(--text-main);
+  }
+
+  .conversation-contact-details > div {
+    font-size: 11px;
+    color: var(--text-muted);
   }
 
   .chat-order-pill {

@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useAppData } from '../context/AppDataContext';
 import { formatDate } from '../utils/formatters';
 import Badge from '../components/Badge';
 import Modal from '../components/Modal';
 import ChatModal from '../components/ChatModal';
+import LeafletMap from '../components/LeafletMap';
 import { 
   FileText, CheckCircle2, XCircle, AlertTriangle, Search, 
-  Package, Plus, Eye, ZoomIn, MessageSquare 
+  Package, Plus, Eye, ZoomIn, MessageSquare, Truck 
 } from 'lucide-react';
 
 function StockAdjuster({ medId, onAdjust }) {
@@ -44,14 +45,15 @@ function StockAdjuster({ medId, onAdjust }) {
 
 export default function PharmacistView() {
   const { currentUser } = useAuth();
-  const { orders, inventory, approveOrder, rejectOrder, adjustStockDelta, saveMedicine } = useAppData();
+  const { orders, inventory, drivers, hub, approveOrder, rejectOrder, adjustStockDelta, saveMedicine } = useAppData();
 
   const [activeTab, setActiveTab] = useState('pedidos'); // 'pedidos' | 'estoque'
   const [statusFilter, setStatusFilter] = useState('TODOS');
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [draftOrderItems, setDraftOrderItems] = useState([]);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
-  const [showChatWithGestor, setShowChatWithGestor] = useState(false);
+  const [showChatWithEquipe, setShowChatWithEquipe] = useState(false);
 
   // Estados para Gestão de Estoque
   const [stockSearch, setStockSearch] = useState('');
@@ -71,18 +73,48 @@ export default function PharmacistView() {
   // Filtragem de pedidos
   const filteredOrders = orders.filter(order => {
     if (statusFilter === 'TODOS') return true;
-    if (statusFilter === 'PENDENTE') return order.status === 'PENDENTE_VALIDACAO';
+    if (statusFilter === 'PENDENTE') return ['PENDENTE_VALIDACAO', 'PENDENTE_ESTOQUE'].includes(order.status);
     if (statusFilter === 'APROVADO') return ['APROVADO', 'PRONTO_ENTREGA', 'EM_TRANSITO', 'ENTREGUE'].includes(order.status);
     if (statusFilter === 'RECUSADO') return order.status === 'RECUSADO';
     return true;
   });
 
-  const pendingCount = orders.filter(o => o.status === 'PENDENTE_VALIDACAO').length;
+  const pendingCount = orders.filter(o => ['PENDENTE_VALIDACAO', 'PENDENTE_ESTOQUE'].includes(o.status)).length;
 
-  const handleApprove = (order) => {
-    if (window.confirm(`Confirma a validação e liberação do pedido ${order.id} para separação e entrega?`)) {
-      approveOrder(order.id, currentUser.name);
+  useEffect(() => {
+    if (selectedOrder) {
+      setDraftOrderItems((selectedOrder.items || []).map(item => ({ ...item })));
+    }
+  }, [selectedOrder]);
+
+  const toggleDraftItem = (medicine) => {
+    setDraftOrderItems(prev => {
+      const exists = prev.some(item => item.medicineId === medicine.id);
+      if (exists) {
+        return prev.filter(item => item.medicineId !== medicine.id);
+      }
+      return [...prev, {
+        medicineId: medicine.id,
+        name: medicine.name,
+        quantity: Math.max(1, Number(medicine.currentStock || 1)),
+        dosage: medicine.form || 'Uso conforme prescrição'
+      }];
+    });
+  };
+
+  const updateDraftQuantity = (medicineId, amount) => {
+    setDraftOrderItems(prev => prev.map(item => {
+      if (item.medicineId !== medicineId) return item;
+      return { ...item, quantity: Math.max(1, Number(amount) || 1) };
+    }));
+  };
+
+  const handleApprove = (order, action = 'full') => {
+    const itemsToSend = draftOrderItems.length > 0 ? draftOrderItems : (order.items || []);
+    if (window.confirm(`Confirma a decisão do pedido ${order.id}?`)) {
+      approveOrder(order.id, currentUser.name, { selectedItems: itemsToSend, action });
       setSelectedOrder(null);
+      setDraftOrderItems([]);
     }
   };
 
@@ -123,6 +155,13 @@ export default function PharmacistView() {
     med.batch.toLowerCase().includes(stockSearch.toLowerCase())
   );
 
+  const dashboardStats = {
+    inTransit: orders.filter(o => o.status === 'EM_TRANSITO').length,
+    pendingReview: orders.filter(o => ['PENDENTE_VALIDACAO', 'PENDENTE_ESTOQUE'].includes(o.status)).length,
+    delivered: orders.filter(o => o.status === 'ENTREGUE').length,
+    lowStock: inventory.filter(m => m.currentStock <= m.minStock).length
+  };
+
   const lowStockCount = inventory.filter(m => m.currentStock <= m.minStock).length;
 
   return (
@@ -143,17 +182,26 @@ export default function PharmacistView() {
           <button
             type="button"
             className="btn-chat-manager-shortcut"
-            onClick={() => setShowChatWithGestor(true)}
+            onClick={() => setShowChatWithEquipe(true)}
             style={{ marginLeft: 'auto' }}
-            title="Abrir canal de comunicação direto com o Gestor Municipal"
+            title="Abrir canal de comunicação direto com a equipe assistencial"
           >
             <MessageSquare size={16} />
-            <span>Chat com Gestor</span>
+            <span>Chat da Equipe</span>
           </button>
         </div>
 
         {/* Abas Superiores */}
         <div className="view-tabs-container">
+          <button
+            type="button"
+            className={`view-tab-btn ${activeTab === 'resumo' ? 'active' : ''}`}
+            onClick={() => setActiveTab('resumo')}
+          >
+            <FileText size={18} />
+            <span>Dashboard Geral</span>
+          </button>
+
           <button
             type="button"
             className={`view-tab-btn ${activeTab === 'pedidos' ? 'active' : ''}`}
@@ -175,6 +223,64 @@ export default function PharmacistView() {
           </button>
         </div>
       </div>
+
+      {activeTab === 'resumo' && (
+        <>
+          <div className="kpi-grid">
+            <div className="kpi-card">
+              <div className="kpi-icon-wrapper" style={{ background: '#e0f2fe', color: '#0284c7' }}>
+                <Package size={20} />
+              </div>
+              <div>
+                <div className="kpi-value">{dashboardStats.pendingReview}</div>
+                <div className="kpi-label">Pendências de validação</div>
+              </div>
+            </div>
+            <div className="kpi-card">
+              <div className="kpi-icon-wrapper" style={{ background: '#ffedd5', color: '#ea580c' }}>
+                <Truck size={20} />
+              </div>
+              <div>
+                <div className="kpi-value">{dashboardStats.inTransit}</div>
+                <div className="kpi-label">Entregas em rota</div>
+              </div>
+            </div>
+            <div className="kpi-card">
+              <div className="kpi-icon-wrapper" style={{ background: '#dcfce7', color: '#15803d' }}>
+                <CheckCircle2 size={20} />
+              </div>
+              <div>
+                <div className="kpi-value">{dashboardStats.delivered}</div>
+                <div className="kpi-label">Entregues no mês</div>
+              </div>
+            </div>
+            <div className="kpi-card">
+              <div className="kpi-icon-wrapper" style={{ background: '#fee2e2', color: '#b91c1c' }}>
+                <AlertTriangle size={20} />
+              </div>
+              <div>
+                <div className="kpi-value">{dashboardStats.lowStock}</div>
+                <div className="kpi-label">Itens com estoque crítico</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="fleet-overview-panel">
+            <div className="fleet-overview-header">
+              <h3>Visão Geral da Frota Municipal</h3>
+              <span>{drivers.length} entregadores ativos</span>
+            </div>
+            <div className="map-wrapper">
+              <LeafletMap
+                drivers={drivers}
+                orders={orders}
+                hub={hub}
+                height="320px"
+              />
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ============================================================== */}
       {/* ABA 1: CONFERÊNCIA DE PEDIDOS */}
@@ -451,15 +557,61 @@ export default function PharmacistView() {
                 )}
 
                 {/* Botões de Ação para pedidos pendentes */}
-                {selectedOrder.status === 'PENDENTE_VALIDACAO' ? (
+                {selectedOrder.status === 'PENDENTE_VALIDACAO' || selectedOrder.status === 'PENDENTE_ESTOQUE' ? (
                   <div className="pharmacist-decision-actions">
+                    <div className="section-title-sm" style={{ marginTop: '16px' }}>Itens do pedido e seleção de liberação</div>
+                    <div className="data-info-card" style={{ gap: '8px' }}>
+                      {inventory.map(medicine => {
+                        const selected = draftOrderItems.some(item => item.medicineId === medicine.id);
+                        const qty = draftOrderItems.find(item => item.medicineId === medicine.id)?.quantity || 1;
+                        return (
+                          <div key={medicine.id} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <input
+                              type="checkbox"
+                              checked={selected}
+                              onChange={() => toggleDraftItem(medicine)}
+                            />
+                            <span style={{ flex: 1 }}>{medicine.name}</span>
+                            {selected && (
+                              <input
+                                type="number"
+                                min="1"
+                                value={qty}
+                                onChange={(e) => updateDraftQuantity(medicine.id, e.target.value)}
+                                style={{ width: '72px' }}
+                                className="form-input"
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+
                     <button
                       type="button"
                       className="btn-approve-action"
-                      onClick={() => handleApprove(selectedOrder)}
+                      onClick={() => handleApprove(selectedOrder, 'full')}
                     >
                       <CheckCircle2 size={18} />
-                      <span>Aprovar Receita & Liberar Pedido</span>
+                      <span>Enviar itens disponíveis</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={() => handleApprove(selectedOrder, 'open_new')}
+                    >
+                      <Package size={16} />
+                      <span>Enviar disponíveis + abrir pedido complementar</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={() => handleApprove(selectedOrder, 'available')}
+                    >
+                      <Package size={16} />
+                      <span>Enviar disponíveis sem novo pedido</span>
                     </button>
 
                     <button
@@ -468,7 +620,7 @@ export default function PharmacistView() {
                       onClick={() => setShowRejectModal(true)}
                     >
                       <XCircle size={18} />
-                      <span>Recusar Solicitação...</span>
+                      <span>Cancelar todos os pedidos</span>
                     </button>
                   </div>
                 ) : (
@@ -662,11 +814,11 @@ export default function PharmacistView() {
         </form>
       </Modal>
 
-      {/* Modal de Chat com o Gestor */}
+      {/* Modal de Chat da Equipe */}
       <ChatModal
-        isOpen={showChatWithGestor}
-        onClose={() => setShowChatWithGestor(false)}
-        initialContactId="user-gerente"
+        isOpen={showChatWithEquipe}
+        onClose={() => setShowChatWithEquipe(false)}
+        initialContactId="user-motoboy"
       />
     </div>
   );

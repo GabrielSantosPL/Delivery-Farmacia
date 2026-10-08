@@ -25,13 +25,7 @@ export default function CitizenView() {
   const [chatTarget, setChatTarget] = useState(null);
 
   // Form states para Novo Pedido
-  const [selectedMeds, setSelectedMeds] = useState([
-    { medicineId: 'med-002', name: 'Losartana Potássica 50mg', quantity: 30, dosage: '1 comprimido pela manhã' }
-  ]);
-  const [currentMedSelect, setCurrentMedSelect] = useState(inventory[0]?.id || '');
-  const [currentMedQty, setCurrentMedQty] = useState(30);
-  const [currentMedDosage, setCurrentMedDosage] = useState('Uso contínuo conforme receita médica');
-  
+  const [selectedMeds, setSelectedMeds] = useState([]);
   const [patientAddress, setPatientAddress] = useState(currentUser.address || 'Rua Martinho Lutero, 320');
   const [patientNeighborhood, setPatientNeighborhood] = useState(currentUser.neighborhood || 'Jardim Morada do Sol');
   const [patientPhone, setPatientPhone] = useState(currentUser.phone || '(19) 99123-4567');
@@ -44,31 +38,6 @@ export default function CitizenView() {
     o.patient?.cpf === currentUser.cpf ||
     o.patient?.name === currentUser.name
   );
-
-  // Adicionar medicamento à lista do pedido
-  const handleAddMedToOrder = () => {
-    const medObj = inventory.find(m => m.id === currentMedSelect);
-    if (!medObj) return;
-
-    if (selectedMeds.some(m => m.medicineId === medObj.id)) {
-      alert('Este medicamento já foi adicionado à lista. Você pode ajustar a quantidade.');
-      return;
-    }
-
-    setSelectedMeds(prev => [
-      ...prev,
-      {
-        medicineId: medObj.id,
-        name: medObj.name,
-        quantity: Number(currentMedQty),
-        dosage: currentMedDosage
-      }
-    ]);
-  };
-
-  const handleRemoveMedFromOrder = (idx) => {
-    setSelectedMeds(prev => prev.filter((_, i) => i !== idx));
-  };
 
   // Upload da foto da receita
   const handlePrescriptionUpload = (e) => {
@@ -84,12 +53,11 @@ export default function CitizenView() {
 
   // Simular receita com carimbo da UBS Morada do Sol para facilidade acadêmica
   const handleSimulatePrescription = () => {
-    const medNames = selectedMeds.map(m => `${m.name} (${m.quantity} un)`);
     const mockSvg = generatePrescriptionSvg({
       patientName: currentUser.name,
       susCard: currentUser.susCard || '702 3456 7890 0012',
       date: new Date().toLocaleDateString('pt-BR'),
-      items: medNames.length > 0 ? medNames : ['Losartana 50mg', 'Metformina 850mg'],
+      items: ['Medicamentos indicados pela prescrição médica'],
       unit: `UBS Indaiatuba - ${patientNeighborhood}`
     });
     setPrescriptionImage(mockSvg);
@@ -98,10 +66,6 @@ export default function CitizenView() {
   // Enviar Novo Pedido
   const handleSubmitNewOrder = (e) => {
     e.preventDefault();
-    if (selectedMeds.length === 0) {
-      setFormError('Selecione pelo menos um medicamento da lista municipal.');
-      return;
-    }
     if (!prescriptionImage) {
       setFormError('É obrigatório anexar a foto da receita médica assinada pelo médico.');
       return;
@@ -223,8 +187,8 @@ export default function CitizenView() {
                 const canEdit = order.status === 'PENDENTE_VALIDACAO';
                 const isRejected = order.status === 'RECUSADO';
                 const isCancelled = order.status === 'CANCELADO_ENTREGADOR';
-                const gestorInitiated = chatMessages.some(m => 
-                  m.fromUserRole === 'gerente' && 
+                const pharmacistInitiated = chatMessages.some(m => 
+                  m.fromUserRole === 'farmaceutico' && 
                   (m.toUserId === currentUser.id || m.toUserName === currentUser.name)
                 );
 
@@ -317,15 +281,15 @@ export default function CitizenView() {
                         </button>
                       )}
 
-                      {gestorInitiated && (
+                      {pharmacistInitiated && (
                         <button
                           type="button"
                           className="btn-chat-patient-pill"
-                          onClick={() => setChatTarget({ contactId: 'user-gerente' })}
-                          title="Conversar com a Gestão Municipal do SUS"
+                          onClick={() => setChatTarget({ contactId: 'user-farm' })}
+                          title="Conversar com a farmácia municipal"
                         >
                           <MessageSquare size={14} />
-                          <span>Falar c/ Gestor</span>
+                          <span>Falar c/ Farmácia</span>
                         </button>
                       )}
 
@@ -374,91 +338,7 @@ export default function CitizenView() {
               </div>
             )}
 
-            {/* Coluna 1: Medicamentos Desejados */}
-            <div className="form-column-box">
-              <div className="box-title">
-                <span>1. Selecionar Medicamentos Prescritos</span>
-              </div>
-              <p className="box-desc">
-                Selecione os medicamentos receitados disponíveis no catálogo municipal (REMUME Indaiatuba):
-              </p>
-
-              <div className="add-med-widget">
-                <div className="form-group">
-                  <label className="form-label">Medicamento da Relação Municipal:</label>
-                  <select
-                    className="form-input"
-                    value={currentMedSelect}
-                    onChange={(e) => setCurrentMedSelect(e.target.value)}
-                  >
-                    {inventory.map(med => (
-                      <option key={med.id} value={med.id}>
-                        {med.name} ({med.form}) - {med.category}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: '8px' }}>
-                  <div className="form-group">
-                    <label className="form-label">Quantidade:</label>
-                    <input
-                      type="number"
-                      min="1"
-                      className="form-input"
-                      value={currentMedQty}
-                      onChange={(e) => setCurrentMedQty(e.target.value)}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Posologia indicada pelo médico:</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Ex: 1 cp a cada 12h"
-                      value={currentMedDosage}
-                      onChange={(e) => setCurrentMedDosage(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  className="btn-add-item-list"
-                  onClick={handleAddMedToOrder}
-                >
-                  <PlusCircle size={16} />
-                  <span>Adicionar Medicamento à Lista</span>
-                </button>
-              </div>
-
-              {/* Lista dos remédios adicionados */}
-              <div className="selected-meds-basket">
-                <strong>Medicamentos no seu pedido ({selectedMeds.length}):</strong>
-                {selectedMeds.length === 0 ? (
-                  <div className="empty-basket-note">Nenhum medicamento adicionado ainda.</div>
-                ) : (
-                  selectedMeds.map((m, idx) => (
-                    <div key={idx} className="basket-item-row">
-                      <div>
-                        <strong>{m.name}</strong>
-                        <div style={{ fontSize: '11px', color: '#64748b' }}>Qtd: {m.quantity} • {m.dosage}</div>
-                      </div>
-                      <button
-                        type="button"
-                        className="btn-remove-basket"
-                        onClick={() => handleRemoveMedFromOrder(idx)}
-                        title="Remover"
-                      >
-                        <Trash2 size={15} />
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Coluna 2: Anexar Receita & Endereço de Entrega */}
+            {/* Coluna 1: Receita & Endereço de Entrega */}
             <div className="form-column-box">
               <div className="box-title">
                 <span>2. Anexar Receita Médica Assinada</span>

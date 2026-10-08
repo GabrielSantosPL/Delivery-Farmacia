@@ -30,8 +30,7 @@ export default function DriverView() {
   // Estado para Finalizar Entrega com Conferência
   const [selectedOrderToDeliver, setSelectedOrderToDeliver] = useState(null);
   const [deliveryPhoto, setDeliveryPhoto] = useState(null);
-  const [isComparing, setIsComparing] = useState(false);
-  const [comparisonResult, setComparisonResult] = useState(null);
+  const [deliveryConfirmationCode, setDeliveryConfirmationCode] = useState('');
   const [photoError, setPhotoError] = useState('');
 
   // Estado para Cancelamento de Entrega
@@ -131,15 +130,22 @@ export default function DriverView() {
       setPhotoError('É obrigatório anexar a foto da receita física recolhida.');
       return;
     }
-    if (comparisonResult && !comparisonResult.isValid) {
-      alert('Não é possível concluir a entrega: A receita recolhida apresentou divergência documental na checagem do sistema.');
+
+    const code = (deliveryConfirmationCode || '').trim().toUpperCase();
+    if (!code) {
+      setPhotoError('É obrigatório informar o código de confirmação informado pelo receptor para concluir a entrega.');
       return;
     }
 
-    completeOrderDelivery(selectedOrderToDeliver.id, deliveryPhoto);
+    if (selectedOrderToDeliver?.deliveryCode && code !== selectedOrderToDeliver.deliveryCode.toUpperCase()) {
+      setPhotoError('Código de confirmação inválido. Peça ao destinatário que informe o código correto.');
+      return;
+    }
+
+    completeOrderDelivery(selectedOrderToDeliver.id, deliveryPhoto, code);
     setSelectedOrderToDeliver(null);
     setDeliveryPhoto(null);
-    setComparisonResult(null);
+    setDeliveryConfirmationCode('');
     alert(`Entrega ${selectedOrderToDeliver.id} validada e confirmada com sucesso!`);
   };
 
@@ -155,7 +161,7 @@ export default function DriverView() {
     if (ok) {
       setOrderToCancel(null);
       setCancellationDetails('');
-      alert(`Entrega ${orderToCancel.id} cancelada no sistema com a justificativa: [${cancellationCategory}]. O gestor municipal e o paciente foram notificados.`);
+      alert(`Entrega ${orderToCancel.id} cancelada no sistema com a justificativa: [${cancellationCategory}]. A farmácia responsável e o paciente foram notificados.`);
     }
   };
 
@@ -241,10 +247,10 @@ export default function DriverView() {
             <button
               type="button"
               className="btn-chat-manager-shortcut driver-manager-chat-btn"
-              onClick={() => setChatTarget({ contactId: 'user-gerente' })}
+              onClick={() => setChatTarget({ contactId: 'user-farm' })}
             >
               <MessageSquare size={15} />
-              <span>Falar com Gestor Municipal</span>
+              <span>Falar com Farmácia</span>
             </button>
           </div>
 
@@ -352,7 +358,7 @@ export default function DriverView() {
                             onClick={() => {
                               setSelectedOrderToDeliver(order);
                               setDeliveryPhoto(null);
-                              setComparisonResult(null);
+                              setDeliveryConfirmationCode('');
                               setPhotoError('');
                             }}
                           >
@@ -443,7 +449,8 @@ export default function DriverView() {
                       onClick={() => {
                         setSelectedOrderToDeliver(stop.order);
                         setDeliveryPhoto(null);
-                        setComparisonResult(null);
+                        setDeliveryConfirmationCode('');
+                        setPhotoError('');
                       }}
                     >
                       <Camera size={14} />
@@ -531,36 +538,38 @@ export default function DriverView() {
             <div className="delivery-instruction-card">
               <ShieldCheck size={26} color="#0284c7" />
               <div>
-                <strong>Validação Documental Sanitária Obrigatória:</strong>
+                <strong>Confirmação de Entrega por Código:</strong>
                 <p>
-                  Recolha a receita médica física de <b>{selectedOrderToDeliver.patient?.name}</b> e envie uma foto. O sistema conferirá automaticamente se a via recolhida corresponde à receita autorizada pela farmácia.
+                  Solicite ao receptor <b>{selectedOrderToDeliver.patient?.name}</b> que informe o código de entrega. Depois, registre a foto da receita física recolhida e confirme a entrega.
                 </p>
               </div>
             </div>
 
-            {/* Comparação Visual e Resultado */}
             <div className="verification-split-view">
-              {/* Lado Esquerdo: Receita Autorizada Arquivada */}
               <div className="verif-side">
-                <span className="verif-label">1. Receita Arquivada no Pedido:</span>
-                <div className="verif-preview-box">
-                  <img src={selectedOrderToDeliver.prescriptionUrl} alt="Receita Arquivada" />
+                <span className="verif-label">1. Código de confirmação do cliente</span>
+                <div className="verif-preview-box" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+                  <div className="code-display-box">{selectedOrderToDeliver.deliveryCode || 'CÓDIGO-123'}</div>
+                  <input
+                    className="form-input"
+                    value={deliveryConfirmationCode}
+                    onChange={(e) => setDeliveryConfirmationCode(e.target.value.toUpperCase())}
+                    placeholder="Informe o código recebido"
+                    maxLength={12}
+                    style={{ width: '100%', marginTop: '12px', textTransform: 'uppercase' }}
+                  />
                 </div>
               </div>
 
-              {/* Lado Direito: Foto Recolhida pelo Motoboy */}
               <div className="verif-side">
-                <span className="verif-label">2. Foto da Via Física Recolhida:</span>
+                <span className="verif-label">2. Foto da receita física recolhida</span>
                 {deliveryPhoto ? (
                   <div className="verif-preview-box">
                     <img src={deliveryPhoto} alt="Foto Capturada" />
                     <button
                       type="button"
                       className="btn-change-photo-mini"
-                      onClick={() => {
-                        setDeliveryPhoto(null);
-                        setComparisonResult(null);
-                      }}
+                      onClick={() => setDeliveryPhoto(null)}
                     >
                       Trocar Foto
                     </button>
@@ -582,57 +591,11 @@ export default function DriverView() {
                           onChange={handleFileUpload}
                         />
                       </label>
-
-                      {/* Botões de Simulação para Avaliação */}
-                      <button
-                        type="button"
-                        className="btn-sim-valid"
-                        onClick={handleSimulateValidPhoto}
-                        title="Simula a foto correta da receita física do paciente"
-                      >
-                        <Sparkles size={14} />
-                        <span>Simular Receita Autêntica (Válida)</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        className="btn-sim-invalid"
-                        onClick={handleSimulateInvalidPhoto}
-                        title="Simula documento divergente para demonstrar bloqueio"
-                      >
-                        <AlertTriangle size={14} />
-                        <span>Simular Documento Incorreto (Teste)</span>
-                      </button>
                     </div>
                   </div>
                 )}
               </div>
             </div>
-
-            {/* Painel de Análise da Comparação */}
-            {isComparing && (
-              <div className="verif-loading-panel">
-                <div className="spinner-dots" />
-                <span>Analisando autenticidade e dados biométricos da receita recolhida...</span>
-              </div>
-            )}
-
-            {comparisonResult && !isComparing && (
-              <div className={`comparison-result-card ${comparisonResult.isValid ? 'valid' : 'invalid'}`}>
-                <div className="result-header">
-                  <strong>
-                    {comparisonResult.isValid ? '✓ Validação Positiva:' : '⚠️ Divergência Detectada:'} {comparisonResult.statusText}
-                  </strong>
-                  <span className="score-badge">Índice: {comparisonResult.score}%</span>
-                </div>
-                <p className="result-msg">{comparisonResult.message}</p>
-                <div className="result-checks-grid">
-                  <div>{comparisonResult.patientMatch ? '✓' : '✗'} Paciente conferido</div>
-                  <div>{comparisonResult.doctorStampMatch ? '✓' : '✗'} Carimbo e CRM validados</div>
-                  <div>{comparisonResult.medicinesMatch ? '✓' : '✗'} Medicamentos prescritos batem</div>
-                </div>
-              </div>
-            )}
 
             {photoError && (
               <div className="login-error-alert" style={{ marginTop: '10px' }}>
@@ -654,11 +617,11 @@ export default function DriverView() {
                 type="button"
                 className="btn-confirm-delivery-submit"
                 onClick={handleConfirmDelivery}
-                disabled={isComparing || !comparisonResult?.isValid}
-                style={{ opacity: (!comparisonResult?.isValid || isComparing) ? 0.6 : 1 }}
+                disabled={!deliveryPhoto || !deliveryConfirmationCode.trim()}
+                style={{ opacity: (!deliveryPhoto || !deliveryConfirmationCode.trim()) ? 0.6 : 1 }}
               >
                 <CheckCircle size={18} />
-                <span>Confirmar Entrega Validada</span>
+                <span>Confirmar Entrega</span>
               </button>
             </div>
           </div>
@@ -680,7 +643,7 @@ export default function DriverView() {
               <AlertTriangle size={24} color="#dc2626" />
               <div>
                 <strong>Atenção: Cancelamento de Rota</strong>
-                <p>O cancelamento registrará ocorrência imediata para o Gestor de Logística e o paciente ({orderToCancel.patient?.name}) será notificado.</p>
+                <p>O cancelamento registrará ocorrência imediata para a farmácia responsável e o paciente ({orderToCancel.patient?.name}) será notificado.</p>
               </div>
             </div>
 

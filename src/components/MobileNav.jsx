@@ -20,7 +20,7 @@ export default function MobileNav() {
               onClick={() => switchRole(u.role)}
             >
               <span>{u.avatar}</span>
-              <span>{u.role === 'farmaceutico' ? 'Farmácia' : u.role === 'entregador' ? 'Motoboy' : u.role === 'gerente' ? 'Gerente' : 'Cidadão'}</span>
+              <span>{u.role === 'farmaceutico' ? 'Farmácia' : u.role === 'entregador' ? 'Motoboy' : 'Cidadão'}</span>
             </button>
           );
         })}

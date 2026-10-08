@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useAppData } from '../context/AppDataContext';
-import { RotateCcw, LogOut, ChevronDown, Bell, MessageSquare } from 'lucide-react';
+import { RotateCcw, LogOut, ChevronDown, Bell, MessageSquare, MoonStar, SunMedium } from 'lucide-react';
 import ChatModal from './ChatModal';
 import NotificationDrawer from './NotificationDrawer';
 
@@ -12,6 +12,12 @@ export default function Navbar({ onOpenChatTrigger = null }) {
   const [showRoleMenu, setShowRoleMenu] = useState(false);
   const [showChatModal, setShowChatModal] = useState(false);
   const [showNotifDrawer, setShowNotifDrawer] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('meddel-theme') === 'dark');
+
+  useEffect(() => {
+    document.body.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+    localStorage.setItem('meddel-theme', darkMode ? 'dark' : 'light');
+  }, [darkMode]);
 
   if (!currentUser) return null;
 
@@ -27,8 +33,6 @@ export default function Navbar({ onOpenChatTrigger = null }) {
         return { label: 'Farmacêutico(a)', color: '#0284c7', bg: '#e0f2fe' };
       case userRoles.ENTREGADOR:
         return { label: 'Entregador / Motoboy', color: '#ea580c', bg: '#ffedd5' };
-      case userRoles.GERENTE:
-        return { label: 'Gerente Municipal', color: '#7c3aed', bg: '#ede9fe' };
       case userRoles.CLIENTE:
         return { label: 'Cidadão / Paciente', color: '#059669', bg: '#d1fae5' };
       default:
@@ -50,8 +54,8 @@ export default function Navbar({ onOpenChatTrigger = null }) {
         <div className="navbar-container">
           {/* Brand / Logo */}
           <div className="navbar-brand">
-            <div className="brand-logo-icon gov-sun-logo" aria-hidden="true">
-              <span className="gov-sun-core" />
+            <div className="brand-logo-icon" aria-label="Logo da Prefeitura de Indaiatuba">
+              <img src="/Logo.png" alt="Logo da Prefeitura de Indaiatuba" />
             </div>
             <div className="brand-texts">
               <div className="brand-kicker">Prefeitura de</div>
@@ -59,7 +63,7 @@ export default function Navbar({ onOpenChatTrigger = null }) {
                 <span className="brand-city">INDAIATUBA</span>
               </div>
               <div className="brand-subtitle">
-                MedDel • Entrega municipal de medicamentos
+                Saúde Ativa Indaiatuba - SAI
               </div>
             </div>
           </div>
@@ -88,6 +92,19 @@ export default function Navbar({ onOpenChatTrigger = null }) {
               <Bell size={18} />
               {unreadNotifs > 0 && <span className="btn-badge-counter notif-pulse">{unreadNotifs}</span>}
               <span className="hide-on-mobile" style={{ fontSize: '13px', fontWeight: '600', marginLeft: '4px' }}>Alertas</span>
+            </button>
+
+            <button
+              type="button"
+              className="navbar-icon-btn theme-toggle-btn"
+              onClick={() => setDarkMode((prev) => !prev)}
+              aria-label={darkMode ? 'Ativar tema claro' : 'Ativar tema escuro'}
+              title={darkMode ? 'Tema escuro ativo' : 'Tema claro ativo'}
+            >
+              {darkMode ? <SunMedium size={18} /> : <MoonStar size={18} />}
+              <span className="hide-on-mobile" style={{ fontSize: '13px', fontWeight: '600', marginLeft: '4px' }}>
+                {darkMode ? 'Claro' : 'Escuro'}
+              </span>
             </button>
 
             {/* Quick Role Switcher Dropdown */}

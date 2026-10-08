@@ -19,58 +19,31 @@ export default function ChatModal({ isOpen, onClose, initialContactId = null, in
     if (!currentUser) return [];
 
     const contacts = [];
-    const gestor = mockUsers.find(u => u.role === userRoles.GERENTE);
 
-    // 1. GESTOR: Pode falar com TODOS os tipos de usuários
-    if (currentUser.role === userRoles.GERENTE) {
-      mockUsers.forEach(u => {
-        if (u.id !== currentUser.id) {
-          contacts.push({
-            id: u.id,
-            name: u.name,
-            role: u.role,
-            avatar: u.avatar,
-            roleLabel: u.role === 'farmaceutico' ? 'Farmacêutico' : u.role === 'entregador' ? 'Motoboy' : 'Cidadão'
-          });
-        }
-      });
-      // Inclui pacientes de pedidos que não estejam nos mockUsers fixos
-      orders.forEach(o => {
-        if (o.patient?.id && !contacts.some(c => c.id === o.patient.id) && o.patient.id !== currentUser.id) {
-          contacts.push({
-            id: o.patient.id,
-            name: o.patient.name,
-            role: userRoles.CLIENTE,
-            avatar: '👤',
-            roleLabel: 'Cidadão / Paciente',
-            orderId: o.id
-          });
-        }
-      });
-    }
-
-    // 2. FARMACÊUTICO: Apenas chat com o Gestor
-    else if (currentUser.role === userRoles.FARMACEUTICO) {
-      if (gestor) {
+    // FARMACÊUTICO: conversa com entregador e clientes vinculados
+    if (currentUser.role === userRoles.FARMACEUTICO) {
+      const farmUsers = mockUsers.filter(u => u.role !== userRoles.FARMACEUTICO);
+      farmUsers.forEach(u => {
         contacts.push({
-          id: gestor.id,
-          name: gestor.name,
-          role: gestor.role,
-          avatar: gestor.avatar,
-          roleLabel: 'Gestor Municipal de Saúde'
+          id: u.id,
+          name: u.name,
+          role: u.role,
+          avatar: u.avatar,
+          roleLabel: u.role === 'entregador' ? 'Motoboy' : 'Cidadão'
         });
-      }
+      });
     }
 
-    // 3. ENTREGADOR: Com o Gestor E com clientes de sua entrega atual
+    // ENTREGADOR: com farmacêutico e clientes de sua entrega atual
     else if (currentUser.role === userRoles.ENTREGADOR) {
-      if (gestor) {
+      const pharma = mockUsers.find(u => u.role === userRoles.FARMACEUTICO);
+      if (pharma) {
         contacts.push({
-          id: gestor.id,
-          name: gestor.name,
-          role: gestor.role,
-          avatar: gestor.avatar,
-          roleLabel: 'Gestor Municipal'
+          id: pharma.id,
+          name: pharma.name,
+          role: pharma.role,
+          avatar: pharma.avatar,
+          roleLabel: 'Farmacêutico(a) Responsável'
         });
       }
       // Clientes de suas entregas designadas
@@ -113,19 +86,14 @@ export default function ChatModal({ isOpen, onClose, initialContactId = null, in
         }
       });
 
-      // Checa se o Gestor iniciou contato anteriormente
-      const gestorInitiated = chatMessages.some(m => 
-        m.fromUserRole === userRoles.GERENTE && 
-        (m.toUserId === currentUser.id || m.toUserName === currentUser.name)
-      );
-
-      if (gestorInitiated && gestor) {
+      const pharma = mockUsers.find(u => u.role === userRoles.FARMACEUTICO);
+      if (pharma) {
         contacts.push({
-          id: gestor.id,
-          name: gestor.name,
-          role: gestor.role,
-          avatar: gestor.avatar,
-          roleLabel: 'Gestor Municipal (Contato Estabelecido)'
+          id: pharma.id,
+          name: pharma.name,
+          role: pharma.role,
+          avatar: pharma.avatar,
+          roleLabel: 'Farmacêutico(a) Responsável'
         });
       }
     }
@@ -250,7 +218,7 @@ export default function ChatModal({ isOpen, onClose, initialContactId = null, in
 
           {/* Dica de regras de permissão */}
           <div className="chat-rules-hint">
-            <span>🔒 Regras de Acesso: Gestor contata todos; Entregador contata Gestor e seus Clientes; Farmacêutico contata Gestor; Cliente contata Entregador designado ou Gestor ativo.</span>
+            <span>🔒 Regras de Acesso: Farmacêutico contata equipe e pacientes vinculados; Entregador contata farmácia e seus clientes; Cliente contata entregador designado ou farmácia responsável.</span>
           </div>
         </div>
 
@@ -272,8 +240,8 @@ export default function ChatModal({ isOpen, onClose, initialContactId = null, in
                 <div className="conversation-contact-header">
                   <span style={{ fontSize: '20px' }}>{currentContact.avatar}</span>
                   <div className="conversation-contact-details">
-                    <strong style={{ fontSize: '14px', color: '#0f172a' }}>{currentContact.name}</strong>
-                    <div style={{ fontSize: '11px', color: '#64748b' }}>{currentContact.roleLabel}</div>
+                    <strong>{currentContact.name}</strong>
+                    <div>{currentContact.roleLabel}</div>
                     {currentContact.orderId && (
                       <span className="chat-order-pill">Pedido: {currentContact.orderId}</span>
                     )}

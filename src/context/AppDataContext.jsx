@@ -12,6 +12,11 @@ const DRIVERS_KEY = 'med_del_drivers_v2';
 const CHAT_KEY = 'med_del_chat_v2';
 const NOTIF_KEY = 'med_del_notif_v2';
 
+const generateDeliveryCode = () => {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from({ length: 6 }, () => alphabet[Math.floor(Math.random() * alphabet.length)]).join('');
+};
+
 export function AppDataProvider({ children }) {
   const [orders, setOrders] = useState(() => {
     const saved = localStorage.getItem(ORDERS_KEY);
@@ -237,56 +242,159 @@ export function AppDataProvider({ children }) {
   };
 
   // Aprovar Pedido (Farmacêutico)
-  const approveOrder = (orderId, pharmacistName) => {
-    setOrders(prev => prev.map(order => {
-      if (order.id === orderId) {
-        // Reduz estoque dos itens
-        setInventory(prevInv => prevInv.map(item => {
-          const reqItem = order.items.find(i => i.medicineId === item.id);
-          if (reqItem) {
-            return {
-              ...item,
-              currentStock: Math.max(0, item.currentStock - (Number(reqItem.quantity) || 1))
-            };
-          }
-          return item;
-        }));
+  const approveOrder = (orderId, pharmacistName, options = {}) => {
+    const { selectedItems = null, shortageAction = 'full' } = options;
+    const targetOrder = orders.find(order => order.id === orderId);
+    if (!targetOrder) return false;
 
-        const driver = drivers[0];
+    const finalItems = selectedItems && selectedItems.length ? selectedItems : targetOrder.items;
+    const shortageItems = finalItems.filter(item => {
+      const stockItem = inventory.find(m => m.id === item.medicineId);
+      if (!stockItem) return false;
+      return Number(item.quantity || 0) > Number(stockItem.currentStock || 0);
+    });
 
-        // Notifica cliente
-        addNotification({
-          userId: order.patient?.id || 'user-cliente',
-          title: '✅ Receita Médica Aprovada!',
-          message: `Seu pedido ${order.id} foi conferido e liberado pela farmácia. Em breve sairá para entrega.`,
-          type: 'order',
-          orderId: order.id
-        });
-
+    if (shortageItems.length > 0 && shortageAction === 'full') {
+      setOrders(prev => prev.map(order => {
+        if (order.id !== orderId) return order;
         return {
           ...order,
-          status: ORDER_STATUS.PRONTO_ENTREGA,
-          validatedBy: pharmacistName,
-          validatedAt: new Date().toISOString(),
-          assignedDriverId: driver ? driver.id : null,
-          assignedDriverName: driver ? driver.name : null,
+          status: ORDER_STATUS.PENDENTE_ESTOQUE,
+          stockResolution: 'waiting',
+          shortageItems,
           history: [
             ...order.history,
             {
-              status: ORDER_STATUS.APROVADO,
+              status: ORDER_STATUS.PENDENTE_ESTOQUE,
               time: new Date().toISOString(),
-              note: `Receita validada e aprovada por ${pharmacistName}. Estoque reservado.`
-            },
-            {
-              status: ORDER_STATUS.PRONTO_ENTREGA,
-              time: new Date().toISOString(),
-              note: `Pedido separado na Farmácia Central. Aguardando coleta do motoboy ${driver ? driver.name : ''}.`
+              note: `Pedido aguardando decisão do cliente porque faltam medicamentos: ${shortageItems.map(item => item.name).join(', ')}.`
             }
           ]
         };
-      }
-      return order;
+      }));
+
+      addNotification({
+        userId: targetOrder.patient?.id || 'user-cliente',
+        title: '⚠️ Falta de medicamento no pedido',
+        message: `No pedido ${orderId}, alguns itens estão fora de estoque. Escolha como deseja receber o restante.`,
+        type: 'order',
+        orderId: orderId
+      });
+      return { needsResolution: true, shortageItems };
+    }
+
+    if (shortageAction === 'cancel') {
+      setOrders(prev => prev.map(order => {
+        if (order.id !== orderId) return order;
+        return {
+          ...order,
+          status: ORDER_STATUS.RECUSADO,
+          validatedBy: pharmacistName,
+          validatedAt: new Date().toISOString(),
+          rejectionReason: 'Pedido cancelado pela gestão farmacêutica por indisponibilidade de itens críticos.',
+          history: [
+            ...order.history,
+            {
+              status: ORDER_STATUS.RECUSADO,
+              time: new Date().toISOString(),
+              note: `Pedido cancelado por indisponibilidade de itens. ${pharmacistName} orientou o cliente.`
+            }
+          ]
+        };
+      }));
+      addNotification({
+        userId: targetOrder.patient?.id || 'user-cliente',
+        title: '❌ Pedido cancelado',
+        message: `Seu pedido ${orderId} foi cancelado porque alguns medicamentos não podem ser dispensados no momento.`,
+        type: 'order',
+        orderId: orderId
+      });
+      return true;
+    }
+
+    const availableItems = finalItems.filter(item => {
+      const stockItem = inventory.find(m => m.id === item.medicineId);
+      return !stockItem || Number(item.quantity || 0) <= Number(stockItem.currentStock || 0);
+    });
+
+    const driver = drivers[0];
+    const deliveryCode = targetOrder.deliveryCode || generateDeliveryCode();
+
+    setInventory(prevInv => prevInv.map(item => {
+      const reqItem = availableItems.find(i => i.medicineId === item.id);
+      if (!reqItem) return item;
+      return {
+        ...item,
+        currentStock: Math.max(0, Number(item.currentStock || 0) - Number(reqItem.quantity || 0))
+      };
     }));
+
+    const nextOrder = {
+      ...targetOrder,
+      items: availableItems,
+      deliveryCode,
+      status: ORDER_STATUS.PRONTO_ENTREGA,
+      validatedBy: pharmacistName,
+      validatedAt: new Date().toISOString(),
+      assignedDriverId: driver ? driver.id : null,
+      assignedDriverName: driver ? driver.name : null,
+      history: [
+        ...targetOrder.history,
+        {
+          status: ORDER_STATUS.APROVADO,
+          time: new Date().toISOString(),
+          note: `Receita validada e aprovada por ${pharmacistName}. Estoque reservado.`
+        },
+        {
+          status: ORDER_STATUS.PRONTO_ENTREGA,
+          time: new Date().toISOString(),
+          note: `Pedido separado na Farmácia Central. Aguardando coleta do motoboy ${driver ? driver.name : ''}. Código de entrega: ${deliveryCode}.`
+        }
+      ]
+    };
+
+    setOrders(prev => {
+      const withoutCurrent = prev.filter(order => order.id !== orderId);
+      const followUpItems = shortageItems.length > 0 ? shortageItems : [];
+
+      if (shortageAction === 'open_new' && followUpItems.length > 0) {
+        const followUpOrder = {
+          ...targetOrder,
+          id: `PED-2026-${String(prev.length + 1).padStart(3, '0')}`,
+          createdAt: new Date().toISOString(),
+          items: followUpItems,
+          status: ORDER_STATUS.PENDENTE_VALIDACAO,
+          assignedDriverId: null,
+          assignedDriverName: null,
+          validatedBy: null,
+          validatedAt: null,
+          rejectionReason: null,
+          placementReason: 'Pedido complementar por falta de estoque no item principal.',
+          deliveryCode: generateDeliveryCode(),
+          history: [
+            {
+              status: ORDER_STATUS.PENDENTE_VALIDACAO,
+              time: new Date().toISOString(),
+              note: `Pedido complementar gerado por indisponibilidade temporária do(s) item(ns) ${followUpItems.map(item => item.name).join(', ')}.`
+            }
+          ]
+        };
+
+        return [nextOrder, followUpOrder, ...withoutCurrent];
+      }
+
+      return [nextOrder, ...withoutCurrent];
+    });
+
+    addNotification({
+      userId: targetOrder.patient?.id || 'user-cliente',
+      title: '✅ Receita Médica Aprovada!',
+      message: `Seu pedido ${orderId} foi conferido e liberado pela farmácia. Código de confirmação: ${deliveryCode}.`,
+      type: 'order',
+      orderId: orderId
+    });
+
+    return true;
   };
 
   // Recusar Pedido (Farmacêutico) - Obriga motivo
@@ -367,9 +475,9 @@ export function AppDataProvider({ children }) {
 
     setOrders(prev => prev.map(order => {
       if (order.id === orderId) {
-        // Notifica o Gerente Municipal
+        // Notifica a farmácia responsável
         addNotification({
-          userId: 'user-gerente',
+          userId: 'user-farm',
           title: `⚠️ Entrega Cancelada pelo Entregador: ${order.id}`,
           message: `Motoboy ${driverName} cancelou a entrega. Motivo: ${reasonCategory}. Detalhes: ${reasonDetails || 'Nenhum'}.`,
           type: 'system',
@@ -407,38 +515,49 @@ export function AppDataProvider({ children }) {
   };
 
   // Finalizar Entrega com Foto (Entregador)
-  const completeOrderDelivery = (orderId, proofPhotoUrl) => {
+  const completeOrderDelivery = (orderId, proofPhotoUrl, confirmationCode = null) => {
     setOrders(prev => prev.map(order => {
-      if (order.id === orderId) {
-        // Notifica cliente
-        addNotification({
-          userId: order.patient?.id || 'user-cliente',
-          title: '🎉 Medicamentos Entregues com Sucesso!',
-          message: `Seu pedido ${order.id} foi entregue com retenção da receita física. Agradecemos por utilizar o SUS Indaiatuba!`,
-          type: 'order',
-          orderId: order.id
-        });
+      if (order.id !== orderId) return order;
 
-        return {
-          ...order,
-          status: ORDER_STATUS.ENTREGUE,
-          deliveryProofPhoto: proofPhotoUrl,
-          completedAt: new Date().toISOString(),
-          history: [
-            ...order.history,
-            {
-              status: ORDER_STATUS.ENTREGUE,
-              time: new Date().toISOString(),
-              note: 'Medicamento entregue ao paciente. Receita física conferida/recolhida e foto anexada com sucesso.'
-            }
-          ]
-        };
+      const normalizedCode = (confirmationCode || '').trim().toUpperCase();
+      const expectedCode = (order.deliveryCode || '').trim().toUpperCase();
+
+      if (expectedCode && normalizedCode && normalizedCode !== expectedCode) {
+        alert('Código de confirmação inválido. Solicite ao cliente que informe o código correto para concluir a entrega.');
+        return order;
       }
-      return order;
+
+      if (expectedCode && !normalizedCode) {
+        alert('É obrigatório informar o código de confirmação informado pelo paciente para finalizar a entrega.');
+        return order;
+      }
+
+      addNotification({
+        userId: order.patient?.id || 'user-cliente',
+        title: '🎉 Medicamentos Entregues com Sucesso!',
+        message: `Seu pedido ${order.id} foi entregue com confirmação do receptor. Agradecemos por utilizar o SUS Indaiatuba!`,
+        type: 'order',
+        orderId: order.id
+      });
+
+      return {
+        ...order,
+        status: ORDER_STATUS.ENTREGUE,
+        deliveryProofPhoto: proofPhotoUrl || order.deliveryProofPhoto,
+        completedAt: new Date().toISOString(),
+        history: [
+          ...order.history,
+          {
+            status: ORDER_STATUS.ENTREGUE,
+            time: new Date().toISOString(),
+            note: 'Medicamento entregue ao paciente. Confirmação do receptor validada via código de entrega.'
+          }
+        ]
+      };
     }));
   };
 
-  // Atribuir Entregador (Gerente)
+  // Atribuir Entregador
   const assignDriverToOrder = (orderId, driverId) => {
     const driver = drivers.find(d => d.id === driverId);
     setOrders(prev => prev.map(order => {
@@ -452,7 +571,7 @@ export function AppDataProvider({ children }) {
             {
               status: order.status,
               time: new Date().toISOString(),
-              note: `Gerente atribuiu pedido ao entregador ${driver ? driver.name : 'N/A'}.`
+              note: `Farmacêutica atribuiu pedido ao entregador ${driver ? driver.name : 'N/A'}.`
             }
           ]
         };
@@ -461,14 +580,14 @@ export function AppDataProvider({ children }) {
     }));
   };
 
-  // Atualizar Estoque (Farmacêutico / Gerente)
+  // Atualizar Estoque (Farmacêutico)
   const updateStock = (medicineId, newStockQuantity) => {
     setInventory(prev => prev.map(item => {
       if (item.id === medicineId) {
         const qty = Math.max(0, Number(newStockQuantity));
         if (qty <= item.minStock) {
           addNotification({
-            userId: 'user-gerente',
+            userId: 'user-farm',
             title: `Alerta de Estoque Crítico: ${item.name}`,
             message: `O saldo de ${item.name} atingiu ${qty} ${item.unit}. Ponto de reposição atingido.`,
             type: 'stock'
@@ -490,7 +609,7 @@ export function AppDataProvider({ children }) {
         const newQty = Math.max(0, item.currentStock + Number(delta));
         if (newQty <= item.minStock) {
           addNotification({
-            userId: 'user-gerente',
+            userId: 'user-farm',
             title: `Alerta de Estoque Crítico: ${item.name}`,
             message: `O saldo de ${item.name} atingiu ${newQty} ${item.unit}.`,
             type: 'stock'

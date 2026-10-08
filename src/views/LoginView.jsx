@@ -37,14 +37,14 @@ export default function LoginView() {
       <div className="login-card-box">
         {/* Header */}
         <div className="login-header-section">
-          <div className="brand-logo-icon gov-sun-logo login-sun">
-            <span className="gov-sun-core" />
+          <div className="brand-logo-icon login-sun" aria-label="Logo da Prefeitura de Indaiatuba">
+            <img src="/Logo.png" alt="Logo da Prefeitura de Indaiatuba" />
           </div>
           <p className="brand-kicker">Prefeitura de</p>
           <h1 className="login-title">INDAIATUBA</h1>
           <p className="login-slogan">Um novo tempo pra você</p>
           <p className="login-subtitle">
-            MedDel • Sistema municipal de entrega de medicamentos do SUS
+            Saúde Ativa Indaiatuba - SAI
           </p>
         </div>
 
@@ -55,7 +55,7 @@ export default function LoginView() {
             <span>Acesso Rápido para Avaliação Acadêmica:</span>
           </div>
           <p className="quick-access-desc">
-            Selecione qualquer um dos 4 perfis abaixo para testar instantaneamente os fluxos de telas:
+            Selecione qualquer um dos 3 perfis abaixo para testar instantaneamente os fluxos de telas:
           </p>
 
           <div className="role-cards-grid">
@@ -87,21 +87,7 @@ export default function LoginView() {
               <p className="role-card-detail">Pedidos em rota, GPS de entrega em Indaiatuba e confirmação com foto da receita/documento.</p>
             </button>
 
-            {/* 3. Gerente */}
-            <button
-              type="button"
-              className="role-card-btn role-gerente"
-              onClick={() => handleQuickLogin(userRoles.GERENTE)}
-            >
-              <div className="role-card-top">
-                <span className="role-card-emoji">👨‍💼</span>
-                <span className="role-card-tag">Gerente Municipal</span>
-              </div>
-              <strong className="role-card-name">Dr. Rogério Meireles</strong>
-              <p className="role-card-detail">Gestão geral dos pedidos, mapa dinâmico da frota de motoboys e controle de estoque global.</p>
-            </button>
-
-            {/* 4. Cliente */}
+            {/* 3. Cliente */}
             <button
               type="button"
               className="role-card-btn role-cliente"
@@ -140,7 +126,6 @@ export default function LoginView() {
             >
               <option value={userRoles.FARMACEUTICO}>Farmacêutico (Validação e Estoque)</option>
               <option value={userRoles.ENTREGADOR}>Entregador / Motoboy (Rota e Comprovante)</option>
-              <option value={userRoles.GERENTE}>Gerente (Frota e Visão Geral)</option>
               <option value={userRoles.CLIENTE}>Cidadão / Paciente (Novo Pedido e Rastreio)</option>
             </select>
           </div>
