@@ -1907,6 +1907,11 @@
   padding: 18px;
 }
 
+/* Esconde o botão "Contatos" por padrão (desktop). Aparece apenas em mobile via media queries abaixo. */
+.mobile-chat-back {
+  display: none;
+}
+
 @media (max-width: 900px) {
   .map-panel-split,
   .modal-two-columns,
@@ -1914,6 +1919,12 @@
   .chat-modal-layout {
     grid-template-columns: 1fr;
     justify-self: center;
+  }
+
+  .mobile-chat-back button{
+
+    opacity: 100%;
+
   }
 
   .new-order-form-grid,
@@ -2171,6 +2182,30 @@
     flex-basis: auto;
   }
 
+  /* Ajuste específico: permite que o botão de 'Auditoria' quebre o texto
+     e se ajuste ao tamanho da célula em telas pequenas, evitando overflow. */
+  .mobile-order-table td:nth-child(6) .btn-table-action {
+    width: auto !important;
+    max-width: calc(100% - 8px) !important;
+    white-space: normal !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    padding: 6px 8px !important;
+    box-sizing: border-box !important;
+    display: inline-block !important;
+    flex: 0 0 auto !important;
+  }
+
+  /* Garante que botões de ação em mobile não excedam a viewport
+     e que o texto seja truncado com reticências se necessário. */
+  .btn-table-action {
+    max-width: 100%;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .stock-section .search-input-box,
   .manager-orders-section .search-input-box {
     min-height: 42px;
@@ -2216,6 +2251,7 @@
     font-weight: 700;
     padding: 4px;
   }
+
 
   .conversation-contact-header {
     display: flex;
